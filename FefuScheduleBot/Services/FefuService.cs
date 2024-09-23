@@ -1,13 +1,14 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using FefuScheduleBot.ServiceRealisation;
 using BetterConsoles.Tables;
-using BetterConsoles.Tables.Builders;
-using BetterConsoles.Tables.Configuration;
-using BetterConsoles.Tables.Models;
-using FefuScheduleBot.Classes;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
 using Hypercube.Dependencies;
+using Hypercube.Shared.Logging;
+using Calendar = FefuScheduleBot.Classes.Calendar;
+
+// ReSharper disable CoVariantArrayConversion
 
 namespace FefuScheduleBot.Services;
 
@@ -15,15 +16,29 @@ namespace FefuScheduleBot.Services;
 public class FefuService : IStartable
 {
     [Dependency] private readonly EnvironmentData _environmentData = default!;
+    private readonly Logger _logger = default!;
     
     private const string Url = "https://univer.dvfu.ru/";
     private const string SheduleApi = "schedule/get";
+    private readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Vladivostok Standard Time");
     private readonly HttpClient _client = new();
 
-    private async Task<FefuEvent[]?> GetSchedule()
+    private Task<FefuEvent[]?> GetEvents(DateTime day)
     {
+        return GetEvents(day, day);
+    }
+    private async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
+    {
+        end = end.AddDays(1);
+
+        if (start >= end)
+            throw new ArgumentException("start cannot be >= end");
+        
+        var startDate = start.Date.ToString(CultureInfo.CurrentCulture).Split(" ")[0];
+        var endDate = end.Date.ToString(CultureInfo.CurrentCulture).Split(" ")[0];
+        
         var request = new HttpRequestMessage();
-        request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start=2024-09-22&end=2024-09-28&groups[]=6534&ppsId=&facilityId=0");
+        request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups[]=6534&ppsId=&facilityId=0");
         request.Method = HttpMethod.Get;
 
         request.Headers.Add("Accept", "application/json, text/javascript, */*; q=0.01");
@@ -45,38 +60,30 @@ public class FefuService : IStartable
 
         return null;
     }
+
+    public DateTime GetLocalTime()
+    {
+        var serverTime = DateTime.Now;
+        var utcTime = serverTime.ToUniversalTime();
+
+        return TimeZoneInfo.ConvertTimeFromUtc(utcTime, _localTimeZone);
+    }
+
+    public async Task<Calendar> GetTomorrowSchedule()
+    {
+        var nextDay = GetLocalTime().AddDays(1);
+        var events = await GetEvents(nextDay);
+
+        if (events is null)
+        {
+            events = [];
+            _logger.Warning("Failed to retrieve the current schedule");
+        }
+        
+        return new Calendar(events);
+    }
     public async Task Start()
     {
-        var data = await GetSchedule();
-        if (data is null) return;
-
-        var calendar = new Calendar(data).UseSubgroup(10);
-        var columns = calendar.ToColumns((@event) => @event[0].Title);
-        var maxHeight = columns[0].Count;
-        var header = new List<Column>();
-
-        foreach (var column in columns)
-        {
-            header.Add(new Column(column[0]));
-        }
-        
-        var table = new Table(header.ToArray())
-        {
-            Config = TableConfig.Markdown()
-        };
-
-        for (var i = 1; i < maxHeight; i++)
-        {
-            var row = new List<Cell>();
-            
-            foreach (var column in columns)
-            {
-                row.Add(new Cell(column[i]));
-            }
-
-            table.AddRow(row.ToArray());
-        }
-        
-        Console.WriteLine(table);
+       
     }
 }

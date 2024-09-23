@@ -1,4 +1,8 @@
 ﻿using System.Collections;
+using System.Globalization;
+using BetterConsoles.Tables;
+using BetterConsoles.Tables.Configuration;
+using BetterConsoles.Tables.Models;
 using FefuScheduleBot.Data;
 
 namespace FefuScheduleBot.Classes;
@@ -6,7 +10,12 @@ namespace FefuScheduleBot.Classes;
 public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
 {
     private const int ExcludeDiscipline = 13933; // PE
-    private Dictionary<string, Dictionary<string, List<FefuEvent>>> Days = new();
+    private readonly Dictionary<string, Dictionary<string, List<FefuEvent>>> _days = new();
+
+    private static string GenerateTimePeriod(DateTime start, DateTime end)
+    {
+        return $"{start.TimeOfDay}-{end.TimeOfDay}";
+    }
     
     public Calendar(FefuEvent[] events)
     {
@@ -16,21 +25,15 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
         }
     }
 
-    private string GenerateTimePeriod(DateTime start, DateTime end)
-    {
-        return $"{start.TimeOfDay}-{end.TimeOfDay}";
-    }
-
     public List<List<string>> ToColumns(Func<List<FefuEvent>, string> resolveEvent)
     {
-        var сolumns = new List<List<string>>();
-        var firstColumn = new List<string>();
-        
-        firstColumn.Add("");
-        сolumns.Add(firstColumn);
+        var columns = new List<List<string>>();
+        var firstColumn = new List<string> { "" };
+
+        columns.Add(firstColumn);
         var allTimes = new SortedSet<string>();
 
-        foreach (var (day, times) in Days)
+        foreach (var (_, times) in _days)
         {
             foreach (var (time, _) in times)
             {
@@ -48,12 +51,11 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
             offset++;
         }
 
-        foreach (var (day, times) in Days)
+        foreach (var (day, times) in _days)
         {
-            var nextColumn = new List<string>();
-            
-            nextColumn.Add(day);
-            сolumns.Add(nextColumn);
+            var nextColumn = new List<string> { day };
+
+            columns.Add(nextColumn);
             
             for (var i = 0; i < offset; i++)
             {
@@ -67,18 +69,18 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
             }
         }
         
-        return сolumns;
+        return columns;
     }
-    
-    public void AddEvent(FefuEvent @event) 
+
+    private void AddEvent(FefuEvent @event) 
     {
         var period = GenerateTimePeriod(@event.Start, @event.End);
-        var day = @event.Start.Date.ToString().Split(" ")[0];
+        var day = @event.Start.Date.ToString(CultureInfo.CurrentCulture).Split(" ")[0];
 
-        if (!Days.TryGetValue(day, out var times))
+        if (!_days.TryGetValue(day, out var times))
         {
             times = new();
-            Days[day] = times;
+            _days[day] = times;
         }
         
         if (!times.TryGetValue(period, out var events))
@@ -94,7 +96,7 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
     {
         var newCalendar = new Calendar([]);
 
-        foreach (var (events, day, times) in this)
+        foreach (var (events, _, _) in this)
         {
             foreach (var @event in events)
             {
@@ -108,9 +110,40 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
         return newCalendar;
     }
 
+    public Table ConvertInTable()
+    {
+        var columns = ToColumns((@event) => @event[0].Title);
+        var maxHeight = columns[0].Count;
+        var header = new List<Column>();
+
+        foreach (var column in columns)
+        {
+            header.Add(new Column(column[0]));
+        }
+        
+        var table = new Table(header.ToArray())
+        {
+            Config = TableConfig.Markdown()
+        };
+
+        for (var i = 1; i < maxHeight; i++)
+        {
+            var row = new List<Cell>();
+            
+            foreach (var column in columns)
+            {
+                row.Add(new Cell(column[i]));
+            }
+
+            table.AddRow(row.ToArray());
+        }
+
+        return table;
+    }
+
     public IEnumerator<Tuple<List<FefuEvent>, string, string>> GetEnumerator()
     {
-        foreach (var (day, times) in Days)
+        foreach (var (day, times) in _days)
         {
             foreach (var (time, events) in times)
             {

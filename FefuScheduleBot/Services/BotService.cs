@@ -15,8 +15,8 @@ namespace FefuScheduleBot.Services;
 public sealed class BotService : IStartable
 {
     public event Action? Connected;
-    public bool IsConnected => Client.ConnectionState == ConnectionState.Connected;
-    public readonly DiscordSocketClient Client;
+    public bool IsConnected => _client.ConnectionState == ConnectionState.Connected;
+    private readonly DiscordSocketClient _client;
 
     [Dependency] private readonly EnvironmentData _environmentData = default!;
     private readonly Logger _logger = default!;
@@ -37,7 +37,7 @@ public sealed class BotService : IStartable
             AlwaysDownloadUsers = true
         };
         
-        Client = new DiscordSocketClient(config);
+        _client = new DiscordSocketClient(config);
     }
     
     public async Task Start()
@@ -45,15 +45,15 @@ public sealed class BotService : IStartable
         InitDependency();
         ConnectToEvents();
         
-        await Client.LoginAsync(TokenType.Bot, _environmentData.DiscordToken);
-        await Client.StartAsync();
+        await _client.LoginAsync(TokenType.Bot, _environmentData.DiscordToken);
+        await _client.StartAsync();
         
         _logger.Debug("Bot created");
     }
 
     private SocketGuildUser GetUserInGuild(string userId, string guildId)
     {
-        var guild = Client.GetGuild(ulong.Parse(guildId));
+        var guild = _client.GetGuild(ulong.Parse(guildId));
         if (guild is null)
             throw new ArgumentException("User not found");
 
@@ -62,6 +62,18 @@ public sealed class BotService : IStartable
             throw new ArgumentException("User not found");
 
         return guildUser;
+    }
+
+    public async Task<IUserMessage> SendMessage(string chatId, string message)
+    {
+        var channel = _client.GetChannel(ulong.Parse(chatId)) as IMessageChannel;
+        
+        if (channel is null)
+        {
+            throw new ArgumentException($"Not found channel by id {chatId}");
+        }
+        
+        return await channel.SendMessageAsync(text: message);
     }
     
     public async Task AwardRole(string userId, string guildId, string roleId)
@@ -83,25 +95,25 @@ public sealed class BotService : IStartable
         _dependencyWrapper = new DependencyContainerWrapper(DependencyManager.Create());
         
         DependencyManager.Register<IServiceScopeFactory>(_ => new CustomServiceScopeFactory(_dependencyWrapper));
-        DependencyManager.Register(Client);
+        DependencyManager.Register(_client);
         DependencyManager.Register(x => new InteractionService(x.Resolve<DiscordSocketClient>()));
     }
 
     private void ConnectToEvents()
     {
-        Client.Log += message =>
+        _client.Log += message =>
         {
             _logger.Debug(message.ToString());
             return Task.CompletedTask;
         };
         
-        Client.Ready += async () =>
+        _client.Ready += async () =>
         {
-            _commands = new InteractionService(Client);
+            _commands = new InteractionService(_client);
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _dependencyWrapper);
             await RegisterCommands();
             
-            Client.InteractionCreated += HandleInteraction;
+            _client.InteractionCreated += HandleInteraction;
             Connected?.Invoke();
         };
     }
@@ -124,7 +136,7 @@ public sealed class BotService : IStartable
     {
         try
         {
-            var ctx = new SocketInteractionContext(Client, arg);
+            var ctx = new SocketInteractionContext(_client, arg);
             await _commands.ExecuteCommandAsync(ctx, _dependencyWrapper);
         }
         catch (Exception ex)

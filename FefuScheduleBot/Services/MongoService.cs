@@ -5,10 +5,12 @@ using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
+using JetBrains.Annotations;
 using MongoDB.Driver;
 
 namespace FefuScheduleBot.Services;
 
+[PublicAPI]
 [Service]
 public sealed class MongoService : IInitializable
 {

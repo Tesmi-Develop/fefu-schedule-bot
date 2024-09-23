@@ -13,7 +13,7 @@ public class MessageWithEmbed
     {
         _message = message;
         Embed = new EmbedBuilder();
-        Embed.WithColor(Color.Purple)
+        Embed.WithColor(Color.Blue)
             .WithDescription(description);
 
         if (title is not null)
