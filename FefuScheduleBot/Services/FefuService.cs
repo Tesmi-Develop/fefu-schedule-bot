@@ -1,19 +1,21 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using System.Text.Json;
 using FefuScheduleBot.ServiceRealisation;
-using BetterConsoles.Tables;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
+using JetBrains.Annotations;
 using Calendar = FefuScheduleBot.Classes.Calendar;
 
 // ReSharper disable CoVariantArrayConversion
 
 namespace FefuScheduleBot.Services;
 
+[PublicAPI]
 [Service]
-public class FefuService : IStartable
+public class FefuService : IInitializable
 {
     [Dependency] private readonly EnvironmentData _environmentData = default!;
     private readonly Logger _logger = default!;
@@ -22,6 +24,7 @@ public class FefuService : IStartable
     private const string SheduleApi = "schedule/get";
     private readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Vladivostok Standard Time");
     private readonly HttpClient _client = new();
+    private readonly List<PropertyInfo> allDateTimeProperties = []; 
 
     private Task<FefuEvent[]?> GetEvents(DateTime day)
     {
@@ -51,7 +54,7 @@ public class FefuService : IStartable
         
         try
         {
-            return JsonSerializer.Deserialize<FefuScheduleData>(content).Events;
+            return RepairFefuScheduleData(JsonSerializer.Deserialize<FefuScheduleData>(content)).Events;
         }
         catch (Exception e)
         {
@@ -61,11 +64,30 @@ public class FefuService : IStartable
         return null;
     }
 
+    private FefuScheduleData RepairFefuScheduleData(FefuScheduleData data)
+    {
+        foreach (var @event in data.Events)
+        {
+            foreach (var property in allDateTimeProperties)
+            {
+                var value = property.GetValue(@event);
+                if (value is null) continue;
+                
+                property.SetValue(@event, ToLocalTime((DateTime)value));
+            }   
+        }
+        
+        return data;
+    }
+
     public DateTime GetLocalTime()
     {
-        var serverTime = DateTime.Now;
-        var utcTime = serverTime.ToUniversalTime();
+        return ToLocalTime(DateTime.Now);
+    }
 
+    public DateTime ToLocalTime(DateTime time)
+    {
+        var utcTime = time.ToUniversalTime();
         return TimeZoneInfo.ConvertTimeFromUtc(utcTime, _localTimeZone);
     }
 
@@ -74,16 +96,23 @@ public class FefuService : IStartable
         var nextDay = GetLocalTime().AddDays(1);
         var events = await GetEvents(nextDay);
 
-        if (events is null)
-        {
-            events = [];
-            _logger.Warning("Failed to retrieve the current schedule");
-        }
-        
+        if (events is not null) return new Calendar(events);
+        events = [];
+        _logger.Warning("Failed to retrieve the current schedule");
+
         return new Calendar(events);
     }
-    public async Task Start()
+
+    public void Init()
     {
-       
+        var type = typeof(FefuEvent);
+        var targetType = typeof(DateTime);
+        
+        foreach (var property in type.GetProperties())
+        {
+            if (property.PropertyType != targetType) continue;
+
+            allDateTimeProperties.Add(property);
+        }
     }
 }
