@@ -1,4 +1,5 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Discord.Rest;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Embeds;
@@ -13,6 +14,7 @@ public class RemoveChat : InteractionModuleBase
 {
     public MongoService MongoService { get; set; } = default!;
     
+    [DefaultMemberPermissions(GuildPermission.Administrator)]
     [SlashCommand("remove_chat", "Deletes chat data")]
     public async Task RemoveChatHandle()
     {

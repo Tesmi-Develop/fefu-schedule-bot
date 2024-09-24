@@ -1,4 +1,5 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Discord.Rest;
 using FefuScheduleBot.Embeds;
 using FefuScheduleBot.Schemas;
@@ -19,6 +20,7 @@ public class ForceUpdate : InteractionModuleBase
     public MongoService MongoService { get; set; } = default!;
     public NotificationService NotificationService { get; set; } = default!;
     
+    [DefaultMemberPermissions(GuildPermission.Administrator)]
     [SlashCommand("force_update", "Forcibly calls the current schedule")]
     public async Task ForceUpdateHandle(UpdateContext context)
     {
@@ -48,6 +50,7 @@ public class ForceUpdate : InteractionModuleBase
             }
             case UpdateContext.Global:
             {
+                NotificationService.ScheduleGlobalSending(guildData.Data);
                 break;
             }
             default:

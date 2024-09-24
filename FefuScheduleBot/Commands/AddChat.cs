@@ -1,4 +1,5 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Discord.Rest;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Embeds;
@@ -13,6 +14,7 @@ public class AddChat : InteractionModuleBase
 {
     public MongoService MongoService { get; set; } = default!;
     
+    [DefaultMemberPermissions(GuildPermission.Administrator)]
     [SlashCommand("add_chat", "Sets up a chat to follow up on the current schedule")]
     public async Task AddChatHandle(int subgroup)
     {

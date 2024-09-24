@@ -39,6 +39,21 @@ public sealed class BotService : IStartable
         
         _client = new DiscordSocketClient(config);
     }
+
+    public async Task WaitForReady()
+    {
+        if (IsConnected) return;
+
+        var task = new TaskCompletionSource();
+        var connection = () =>
+        {
+            task.TrySetResult();
+        };
+
+        Connected += connection;
+        await task.Task;
+        Connected -= connection;
+    }
     
     public async Task Start()
     {
