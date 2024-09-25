@@ -14,12 +14,6 @@ public struct FefuEvent
     [JsonPropertyName("end")]
     public DateTime End { get; set; }
     
-    [JsonPropertyName("start")]
-    public string StartStr { get; set; }
-        
-    [JsonPropertyName("end")]
-    public string EndStr { get; set; }
-    
     [JsonPropertyName("disciplineId")]
     public int DisciplineId { get; set; }
     
