@@ -3,8 +3,7 @@
 namespace FefuScheduleBot.Data;
 
 [Serializable]
-public struct FefuScheduleData
+public class FefuScheduleData
 {
-    [JsonPropertyName("events")]
-    public FefuEvent[] Events { get; set; }
+    [JsonPropertyName("events")] public FefuEvent[] Events { get; set; } = default!;
 }

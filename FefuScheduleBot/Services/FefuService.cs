@@ -54,9 +54,7 @@ public class FefuService : IInitializable
         
         try
         {
-            var data = JsonSerializer.Deserialize<FefuScheduleData>(content).Events;
-            Console.WriteLine(content);
-            return data;
+            return RepairFefuScheduleData(JsonSerializer.Deserialize<FefuScheduleData>(content)!).Events;
         }
         catch (Exception e)
         {
