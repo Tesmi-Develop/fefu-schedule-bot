@@ -54,7 +54,10 @@ public class FefuService : IInitializable
         
         try
         {
-            return RepairFefuScheduleData(JsonSerializer.Deserialize<FefuScheduleData>(content)).Events;
+            var data = JsonSerializer.Deserialize<FefuScheduleData>(content).Events;
+            Console.WriteLine(data[0].StartStr);
+            Console.WriteLine(data[0].EndStr);
+            return data;
         }
         catch (Exception e)
         {
@@ -73,6 +76,8 @@ public class FefuService : IInitializable
                 var value = property.GetValue(@event);
                 if (value is null) continue;
                 
+                Console.WriteLine(((DateTime)value));
+                Console.WriteLine(((DateTime)value).ToLocalTime());
                 property.SetValue(@event, ToLocalTime((DateTime)value));
             }   
         }
