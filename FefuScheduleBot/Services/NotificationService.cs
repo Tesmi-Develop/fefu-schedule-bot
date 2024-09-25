@@ -3,6 +3,7 @@ using FefuScheduleBot.Classes;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.ServiceRealisation;
+using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
 
@@ -67,7 +68,7 @@ public class NotificationService : IStartable
     {
         await _botService.WaitForReady();
         var target = _fefuService.GetLocalTime().AddDays(1).Date.AddHours(20);
-        _logger.Info($"Scheduled for a schedule update on {target}");
+        _logger.Info($"Scheduled for a schedule update on {target.ToStringWithCulture("t")}");
         
         while (true)
         {
@@ -75,7 +76,7 @@ public class NotificationService : IStartable
             {
                 ScheduleGlobalSending();
                 target = _fefuService.GetLocalTime().AddDays(1).Date.AddHours(20);
-                _logger.Info($"There has been a schedule update, next time:  {target}");
+                _logger.Info($"There has been a schedule update, next time: {target.ToStringWithCulture("t")}");
             }
             
             await Task.Delay(10000);

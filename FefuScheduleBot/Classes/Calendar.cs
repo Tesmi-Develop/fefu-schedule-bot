@@ -4,6 +4,7 @@ using BetterConsoles.Tables;
 using BetterConsoles.Tables.Configuration;
 using BetterConsoles.Tables.Models;
 using FefuScheduleBot.Data;
+using FefuScheduleBot.Utils.Extensions;
 using JetBrains.Annotations;
 
 namespace FefuScheduleBot.Classes;
@@ -16,7 +17,7 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
 
     private static string GenerateTimePeriod(DateTime start, DateTime end)
     {
-        return $"{start.ToShortTimeString()}-{end.ToShortTimeString()}";
+        return $"{start.ToStringWithCulture("t")}-{end.ToStringWithCulture("t")}";
     }
     
     public Calendar(FefuEvent[] events)
@@ -77,7 +78,7 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
     private void AddEvent(FefuEvent @event) 
     {
         var period = GenerateTimePeriod(@event.Start, @event.End);
-        var day = @event.Start.Date.ToString("d", new CultureInfo("de-DE"));
+        var day = @event.Start.Date.ToStringWithCulture("d");
 
         if (!_days.TryGetValue(day, out var times))
         {
