@@ -73,8 +73,6 @@ public class FefuService : IInitializable
                 var value = property.GetValue(@event);
                 if (value is null) continue;
                 
-                Console.WriteLine(((DateTime)value));
-                Console.WriteLine(((DateTime)value).ToLocalTime());
                 property.SetValue(@event, ToLocalTime((DateTime)value));
             }   
         }
