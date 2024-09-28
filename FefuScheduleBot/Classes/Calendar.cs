@@ -115,7 +115,7 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
 
     public Table ConvertInTable()
     {
-        var columns = ToColumns((@event) => @event[0].Title);
+        var columns = ToColumns((@event) => $"{@event[0].Title}[{@event[0].Classroom}]");
         var maxHeight = columns[0].Count;
         var header = new List<Column>();
 
