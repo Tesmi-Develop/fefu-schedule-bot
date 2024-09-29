@@ -24,12 +24,13 @@ public class FefuService : IInitializable
     private const string SheduleApi = "schedule/get";
     private readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Vladivostok Standard Time");
     private readonly HttpClient _client = new();
-    private readonly List<PropertyInfo> allDateTimeProperties = []; 
+    private readonly List<PropertyInfo> _allDateTimeProperties = []; 
 
     private Task<FefuEvent[]?> GetEvents(DateTime day)
     {
         return GetEvents(day, day);
     }
+    
     private async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
     {
         end = end.AddDays(1);
@@ -49,6 +50,7 @@ public class FefuService : IInitializable
         request.Headers.Add("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3");
         request.Headers.Add("X-Requested-With", "XMLHttpRequest");
         request.Headers.Add("Cookie", $"_univer_identity={_environmentData.UniverId}; _jwts={_environmentData.Jwts}; LtpaToken2={_environmentData.LtpaToken}");
+        
         var response = await _client.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
         
@@ -68,7 +70,7 @@ public class FefuService : IInitializable
     {
         foreach (var @event in data.Events)
         {
-            foreach (var property in allDateTimeProperties)
+            foreach (var property in _allDateTimeProperties)
             {
                 var value = property.GetValue(@event);
                 if (value is null) continue;
@@ -98,6 +100,7 @@ public class FefuService : IInitializable
 
         if (events is not null) return new Calendar(events);
         events = [];
+        
         _logger.Warning("Failed to retrieve the current schedule");
 
         return new Calendar(events);
@@ -111,8 +114,7 @@ public class FefuService : IInitializable
         foreach (var property in type.GetProperties())
         {
             if (property.PropertyType != targetType) continue;
-
-            allDateTimeProperties.Add(property);
+            _allDateTimeProperties.Add(property);
         }
     }
 }

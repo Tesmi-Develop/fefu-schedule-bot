@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Globalization;
 using BetterConsoles.Tables;
 using BetterConsoles.Tables.Configuration;
 using BetterConsoles.Tables.Models;
