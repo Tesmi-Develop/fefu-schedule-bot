@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using FefuScheduleBot.Environments;
+﻿using FefuScheduleBot.Environments;
 using FefuScheduleBot.ServiceRealisation;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;

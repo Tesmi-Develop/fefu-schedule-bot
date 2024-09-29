@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.Rest;
-using FefuScheduleBot.Data;
 using FefuScheduleBot.Embeds;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.Services;
