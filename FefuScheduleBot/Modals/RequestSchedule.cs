@@ -31,7 +31,7 @@ public class RequestSchedule : BaseModal
             var weekType = weekTypeStr switch
             {
                 "Т" => WeekType.Current,
-                "Н" => WeekType.Next,
+                "С" => WeekType.Next,
                 _ => throw new ArgumentException()
             };
 
