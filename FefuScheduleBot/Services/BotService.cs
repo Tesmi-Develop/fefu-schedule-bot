@@ -151,6 +151,16 @@ public sealed class BotService : IStartable, IInitializable
 
             await instance.Process(modal);
         };
+
+        _client.ButtonExecuted += async component =>
+        {
+            // Temporary solution, there will be an abstraction in the future
+            
+            if (component.Data.CustomId == "requestSchedule")
+            {
+                await component.RespondWithModalAsync(new RequestSchedule().BuildForm());
+            }
+        };
     }
     
     private async Task RegisterCommands()
