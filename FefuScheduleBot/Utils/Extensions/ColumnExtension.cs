@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 
 namespace FefuScheduleBot.Utils.Extensions;
 

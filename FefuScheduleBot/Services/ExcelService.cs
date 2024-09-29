@@ -10,8 +10,14 @@ using OfficeOpenXml.Style;
 
 namespace FefuScheduleBot.Services;
 
+public enum WeekType
+{
+    Current,
+    Next
+}
+
 [Service]
-public class ExcelService : IStartable, IInitializable
+public class ExcelService
 {
     private readonly Dictionary<int, string> _abbreviations = new()
     {
@@ -47,19 +53,18 @@ public class ExcelService : IStartable, IInitializable
     
     [Dependency] private readonly FefuService _fefuService = default!;
 
-    public async Task Start()
+    public async Task<ExcelPackage> GenerateSchedule(WeekType weekType, int subgroup)
     {
-        var week = _fefuService.GetStudyWeek();
-        var events = await _fefuService.GetEvents(week.Start, week.End);
-        var calendar = new Calendar(events ?? []).UseSubgroup(10);
-
-        var file = new FileInfo("my-table.xlsx");
-        if (File.Exists(file.FullName))
-        {
-            File.Delete(file.FullName);
-        }
+        var time = _fefuService.GetLocalTime();
+        var fileName = $"Расписание {time.ToStringWithCulture("d")}";
+        var week = weekType == WeekType.Current
+            ? _fefuService.GetStudyWeek() 
+            : _fefuService.GetStudyWeek(_fefuService.GetLocalTime().AddDays(7));
         
-        using var package = GenerateTable(file, calendar, week);
+        var events = await _fefuService.GetEvents(week.Start, week.End);
+        var calendar = new Calendar(events ?? []).UseSubgroup(subgroup);
+
+        return GenerateTable(new FileInfo($"{fileName}.xlsx"), calendar, week);
     }
 
     private ExcelPackage GenerateTable(FileInfo file, Calendar calendar, Week week)
@@ -119,7 +124,7 @@ public class ExcelService : IStartable, IInitializable
             offset += 1;
         }
 
-        var endPoint = new Vector2i(firstPoint.X + Calendar.CountWorkingDays + 1, firstPoint.Y);
+        var endPoint = new Vector2i(firstPoint.X + _width - 1, firstPoint.Y);
         SetBorder(sheet.Cells[firstPoint.Y, firstPoint.X, endPoint.Y, endPoint.X]);
         
         startPosition += new Vector2i(0, 1);

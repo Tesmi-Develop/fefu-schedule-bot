@@ -8,4 +8,9 @@ public static class DateTimeExtension
     {
         return date.ToString(format, new CultureInfo("de-DE"));
     }
+    
+    public static string ToStringWithCulture(this DateTime date)
+    {
+        return date.ToString(new CultureInfo("de-DE"));
+    }
 }

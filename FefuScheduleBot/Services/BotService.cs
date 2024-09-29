@@ -3,6 +3,7 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using FefuScheduleBot.Environments;
+using FefuScheduleBot.Modals;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
 using Hypercube.Dependencies;
@@ -14,7 +15,7 @@ namespace FefuScheduleBot.Services;
 
 [PublicAPI]
 [Service]
-public sealed class BotService : IStartable
+public sealed class BotService : IStartable, IInitializable
 {
     public event Action? Connected;
     public bool IsConnected => _client.ConnectionState == ConnectionState.Connected;
@@ -24,6 +25,8 @@ public sealed class BotService : IStartable
     private readonly Logger _logger = default!;
     private InteractionService _commands = default!;
     private DependencyContainerWrapper _dependencyWrapper = default!;
+    private DependenciesContainer _dependenciesContainer = default!;
+    private Dictionary<string, Type> _modals = new();
 
     public BotService()
     {
@@ -56,18 +59,6 @@ public sealed class BotService : IStartable
         await task.Task;
         Connected -= connection;
     }
-    
-    public async Task Start()
-    {
-        InitDependency();
-        ConnectToEvents();
-        
-        await _client.LoginAsync(TokenType.Bot, _environmentData.DiscordToken);
-        await _client.StartAsync();
-        
-        _logger.Debug("Bot created");
-    }
-
     private SocketGuildUser GetUserInGuild(string userId, string guildId)
     {
         var guild = _client.GetGuild(ulong.Parse(guildId));
@@ -82,6 +73,16 @@ public sealed class BotService : IStartable
     }
 
     public async Task<IUserMessage> SendMessage(string chatId, string message)
+    {
+        if (_client.GetChannel(ulong.Parse(chatId)) is not IMessageChannel channel)
+        {
+            throw new ArgumentException($"Not found channel by id {chatId}");
+        }
+        
+        return await channel.SendMessageAsync(text: message);
+    }
+    
+    public async Task<IUserMessage> SendFile(string chatId, string message)
     {
         if (_client.GetChannel(ulong.Parse(chatId)) is not IMessageChannel channel)
         {
@@ -107,7 +108,8 @@ public sealed class BotService : IStartable
     
     private void InitDependency()
     {
-        _dependencyWrapper = new DependencyContainerWrapper(DependencyManager.Create());
+        _dependenciesContainer = DependencyManager.Create();
+        _dependencyWrapper = new DependencyContainerWrapper(_dependenciesContainer);
         
         DependencyManager.Register<IServiceScopeFactory>(_ => new CustomServiceScopeFactory(_dependencyWrapper));
         DependencyManager.Register(_client);
@@ -130,6 +132,24 @@ public sealed class BotService : IStartable
             
             _client.InteractionCreated += HandleInteraction;
             Connected?.Invoke();
+        };
+
+        _client.ModalSubmitted += async modal =>
+        {
+            var id = modal.Data.CustomId;
+            var haveModal = _modals.TryGetValue(id, out var type);
+            if (!haveModal)
+            {
+                _logger.Warning($"Sent modal with unknown id {id}");
+                return;
+            }
+
+            var constructors = type!.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var constructorInfo = constructors.Length == 1 ? constructors[0] : throw new InvalidOperationException();
+            var instance = (BaseModal)constructorInfo.Invoke([]);
+            _dependenciesContainer.Inject(instance);
+
+            await instance.Process(modal);
         };
     }
     
@@ -162,6 +182,33 @@ public sealed class BotService : IStartable
             {
                 await arg.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
             }
+        }
+    }
+    
+    public async Task Start()
+    {
+        InitDependency();
+        ConnectToEvents();
+        
+        await _client.LoginAsync(TokenType.Bot, _environmentData.DiscordToken);
+        await _client.StartAsync();
+        
+        _logger.Debug("Bot created");
+    }
+
+    public void Init()
+    {
+        foreach (var (type, _) in ReflectionHelper.GetAllTypes<ModalAttribute>())
+        {
+            var targetType = typeof(BaseModal);
+            
+            if (!type.IsAssignableTo(targetType))
+            {
+                _logger.Warning($"Found a {type.Name} that does not inherit a class {targetType.Name}");
+                continue;
+            }
+            
+            _modals[type.FullName ?? string.Empty] = type;
         }
     }
 }
