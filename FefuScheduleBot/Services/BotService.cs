@@ -7,10 +7,12 @@ using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FefuScheduleBot.Services;
 
+[PublicAPI]
 [Service]
 public sealed class BotService : IStartable
 {
@@ -81,9 +83,7 @@ public sealed class BotService : IStartable
 
     public async Task<IUserMessage> SendMessage(string chatId, string message)
     {
-        var channel = _client.GetChannel(ulong.Parse(chatId)) as IMessageChannel;
-        
-        if (channel is null)
+        if (_client.GetChannel(ulong.Parse(chatId)) is not IMessageChannel channel)
         {
             throw new ArgumentException($"Not found channel by id {chatId}");
         }

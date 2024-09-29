@@ -30,7 +30,19 @@ public static class ServiceManager
             if (!type.IsAssignableTo(typeof(IStartable))) 
                 continue;
 
-            ((IStartable) service).Start();
+            async Task Start()
+            {
+                try
+                {
+                    await ((IStartable)service).Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
+            _ = Start();
         }
     }
 

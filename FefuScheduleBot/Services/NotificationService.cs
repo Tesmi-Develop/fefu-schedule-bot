@@ -1,14 +1,15 @@
-﻿using Discord.Rest;
-using FefuScheduleBot.Classes;
+﻿using FefuScheduleBot.Classes;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
+using JetBrains.Annotations;
 
 namespace FefuScheduleBot.Services;
 
+[PublicAPI]
 [Service]
 public class NotificationService : IStartable
 {

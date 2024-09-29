@@ -24,13 +24,13 @@ public class FefuService : IInitializable
     private const string SheduleApi = "schedule/get";
     private readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Vladivostok Standard Time");
     private readonly HttpClient _client = new();
-    private readonly List<PropertyInfo> allDateTimeProperties = []; 
+    private readonly List<PropertyInfo> _allDateTimeProperties = []; 
 
     private Task<FefuEvent[]?> GetEvents(DateTime day)
     {
         return GetEvents(day, day);
     }
-    private async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
+    public async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
     {
         end = end.AddDays(1);
 
@@ -68,7 +68,7 @@ public class FefuService : IInitializable
     {
         foreach (var @event in data.Events)
         {
-            foreach (var property in allDateTimeProperties)
+            foreach (var property in _allDateTimeProperties)
             {
                 var value = property.GetValue(@event);
                 if (value is null) continue;
@@ -78,6 +78,26 @@ public class FefuService : IInitializable
         }
         
         return data;
+    }
+
+    public Week GetStudyWeek()
+    {
+        return GetStudyWeek(GetLocalTime());
+    }
+    
+    public Week GetStudyWeek(DateTime date)
+    {
+        var myCal = CultureInfo.InvariantCulture.Calendar;
+        var dayOfWeek = myCal.GetDayOfWeek(date);
+
+        if (dayOfWeek == DayOfWeek.Sunday)
+        {
+            var first = date.AddDays(1).Date;
+            var end = first.AddDays(5).Date;
+            return new Week(first, end);
+        }
+
+        return new Week(date.AddDays(-((int)dayOfWeek - 1)), date.AddDays(6 - (int)dayOfWeek));
     }
 
     public DateTime GetLocalTime()
@@ -112,7 +132,7 @@ public class FefuService : IInitializable
         {
             if (property.PropertyType != targetType) continue;
 
-            allDateTimeProperties.Add(property);
+            _allDateTimeProperties.Add(property);
         }
     }
 }

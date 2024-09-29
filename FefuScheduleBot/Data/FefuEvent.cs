@@ -18,6 +18,9 @@ public class FefuEvent
     [JsonPropertyName("disciplineId")]
     public int DisciplineId { get; set; }
     
+    [JsonPropertyName("order")]
+    public int Order { get; set; }
+    
     [JsonPropertyName("classroom")]
     public string Classroom { get; set; }
     

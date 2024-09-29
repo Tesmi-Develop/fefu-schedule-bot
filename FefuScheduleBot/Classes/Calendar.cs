@@ -1,19 +1,59 @@
 ﻿using System.Collections;
-using System.Globalization;
 using BetterConsoles.Tables;
 using BetterConsoles.Tables.Configuration;
 using BetterConsoles.Tables.Models;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Utils.Extensions;
 using JetBrains.Annotations;
+// ReSharper disable SuspiciousTypeConversion.Global
 
 namespace FefuScheduleBot.Classes;
 
+public class CalendarPairList {
+    private readonly List<FefuEvent> _events;
+    private readonly string _day;
+    private readonly string _time;
+        
+    public CalendarPairList(List<FefuEvent> events, string day, string time)
+    {
+        _events = events;
+        _day = day;
+        _time = time;
+    }
+
+    public void Deconstruct(out List<FefuEvent> events, out string day, out string time)
+    {
+        events = _events;
+        day = _day;
+        time = _time;
+    }
+}
+
 [PublicAPI]
-public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
+public class Calendar : IEnumerable<CalendarPairList>
 {
+    public static int CountLessons = 7;
+    public static int CountWorkingDays = 6;
+    public static readonly TimeOnly LessonStartTime = new(8, 30);
+    public static readonly TimeSpan LessonDuractionTime = new(0, 1, 30, 0);
+    public static readonly TimeSpan BreakTime = new(0, 0, 10, 0);
+    public static readonly List<string> HashedLessonTimes = [];
+
+    static Calendar()
+    {
+        var startTime = LessonStartTime;
+        for (var i = 1; i <= CountLessons; i++)
+        {
+            var endTime = startTime.Add(LessonDuractionTime);
+            HashedLessonTimes.Add($"{startTime.ToStringWithCulture()}-{endTime.ToStringWithCulture()}");
+
+            startTime = endTime.Add(BreakTime);
+        }
+    }
+    
+    public Dictionary<string, Dictionary<string, List<FefuEvent>>> Days { get; } = new();
+
     private const int ExcludeDiscipline = 13933; // PE
-    private readonly Dictionary<string, Dictionary<string, List<FefuEvent>>> _days = new();
 
     private static string GenerateTimePeriod(DateTime start, DateTime end)
     {
@@ -36,7 +76,7 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
         columns.Add(firstColumn);
         var allTimes = new SortedSet<string>();
 
-        foreach (var (_, times) in _days)
+        foreach (var (_, times) in Days)
         {
             foreach (var (time, _) in times)
             {
@@ -54,7 +94,7 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
             offset++;
         }
 
-        foreach (var (day, times) in _days)
+        foreach (var (day, times) in Days)
         {
             var nextColumn = new List<string> { day };
 
@@ -74,16 +114,16 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
         
         return columns;
     }
-
-    private void AddEvent(FefuEvent @event) 
+    
+    private void AddEvent(FefuEvent @event)
     {
         var period = GenerateTimePeriod(@event.Start, @event.End);
         var day = @event.Start.Date.ToStringWithCulture("d");
-
-        if (!_days.TryGetValue(day, out var times))
+        
+        if (!Days.TryGetValue(day, out var times))
         {
             times = new();
-            _days[day] = times;
+            Days[day] = times;
         }
         
         if (!times.TryGetValue(period, out var events))
@@ -144,13 +184,13 @@ public class Calendar : IEnumerable<Tuple<List<FefuEvent>, string, string>>
         return table;
     }
 
-    public IEnumerator<Tuple<List<FefuEvent>, string, string>> GetEnumerator()
+    public IEnumerator<CalendarPairList> GetEnumerator()
     {
-        foreach (var (day, times) in _days)
+        foreach (var (day, times) in Days)
         {
             foreach (var (time, events) in times)
             {
-                yield return new (events, day, time);
+                yield return new CalendarPairList(events, day, time);
             }
         }
     }
