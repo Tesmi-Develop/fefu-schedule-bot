@@ -37,11 +37,18 @@ public class RequestSchedule : BaseModal
 
             async Task StartSending()
             {
-                var user = modal.User;
-                var table = await _excelService.GenerateSchedule(weekType, subgroup);
-                
-                await user.SendFileAsync(filePath: table.File.FullName);
-                File.Delete(table.File.FullName);
+                try
+                {
+                    var user = modal.User;
+                    var table = await _excelService.GenerateSchedule(weekType, subgroup);
+
+                    await user.SendFileAsync(filePath: table.File.FullName);
+                    File.Delete(table.File.FullName);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
 
             _ = StartSending();
