@@ -63,8 +63,12 @@ public class ExcelService : IInitializable
         
         var events = await _fefuService.GetEvents(week.Start, week.End);
         var calendar = new Calendar(events ?? []).UseSubgroup(subgroup);
+        var fileInfo = new FileInfo($"{fileName}.xlsx");
 
-        return GenerateTable(new FileInfo($"{fileName}.xlsx"), calendar, week);
+        if (File.Exists(fileInfo.FullName))
+            File.Delete(fileInfo.FullName);
+
+        return GenerateTable(fileInfo, calendar, week);
     }
 
     private ExcelPackage GenerateTable(FileInfo file, Calendar calendar, Week week)
