@@ -17,7 +17,7 @@ public enum WeekType
 }
 
 [Service]
-public class ExcelService
+public class ExcelService : IInitializable
 {
     private readonly Dictionary<int, string> _abbreviations = new()
     {
