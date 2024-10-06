@@ -34,6 +34,7 @@ public static class Program
             return Task.CompletedTask;
         
         DependencyManager.InitThread();
+        DependencyManager.Register(DependencyManager.GetContainer());
         DependencyManager.Register(container);
         
         ServiceManager.CreateAll();

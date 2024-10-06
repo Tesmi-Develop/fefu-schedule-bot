@@ -3,5 +3,4 @@
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class ModalAttribute : Attribute
 {
-    public ModalAttribute() {}
 }

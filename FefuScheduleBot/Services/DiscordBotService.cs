@@ -15,7 +15,7 @@ namespace FefuScheduleBot.Services;
 
 [PublicAPI]
 [Service]
-public sealed class BotService : IStartable, IInitializable
+public sealed class DiscordBotService : IStartable, IInitializable
 {
     public event Action? Connected;
     public bool IsConnected => _client.ConnectionState == ConnectionState.Connected;
@@ -28,7 +28,7 @@ public sealed class BotService : IStartable, IInitializable
     private DependenciesContainer _dependenciesContainer = default!;
     private Dictionary<string, Type> _modals = new();
 
-    public BotService()
+    public DiscordBotService()
     {
         var config = new DiscordSocketConfig()
         {

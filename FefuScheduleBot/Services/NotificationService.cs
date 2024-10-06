@@ -13,7 +13,7 @@ namespace FefuScheduleBot.Services;
 [Service]
 public class NotificationService : IStartable
 {
-    [Dependency] private readonly BotService _botService = default!;
+    [Dependency] private readonly DiscordBotService _discordBotService = default!;
     [Dependency] private readonly FefuService _fefuService = default!;
     [Dependency] private readonly MongoService _mongoService = default!;
 
@@ -30,7 +30,7 @@ public class NotificationService : IStartable
     private async Task SendCalendar(string chatId, NotificationChatData chatData, Calendar calendar)
     {
         var table = calendar.UseSubgroup(chatData.Subgroup).ConvertInTable();
-        await _botService.SendMessage(chatId, table.ToString());
+        await _discordBotService.SendMessage(chatId, table.ToString());
     }
 
     private async Task StartSending()
@@ -67,7 +67,7 @@ public class NotificationService : IStartable
 
     public async Task Start()
     {
-        await _botService.WaitForReady();
+        await _discordBotService.WaitForReady();
         var target = _fefuService.GetLocalTime().AddDays(1).Date.AddHours(20);
         _logger.Info($"Scheduled for a schedule update on {target.ToStringWithCulture("t")}");
         

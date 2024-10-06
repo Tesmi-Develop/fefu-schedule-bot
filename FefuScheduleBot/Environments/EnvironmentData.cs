@@ -22,4 +22,8 @@ public sealed class EnvironmentData
     public readonly string UniverId = default!;
     public readonly string Jwts = default!;
     public readonly string LtpaToken = default!;
+
+    [EnvironmentSpacing]
+    
+    public readonly string TelegramToken = default!;
 }

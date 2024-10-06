@@ -17,6 +17,8 @@ namespace FefuScheduleBot.Services;
 [Service]
 public class FefuService : IInitializable
 {
+    public readonly int MaxSubgroups = 10;
+    
     [Dependency] private readonly EnvironmentData _environmentData = default!;
     private readonly Logger _logger = default!;
     
