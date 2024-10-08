@@ -19,6 +19,8 @@ public static class Program
         }
     }
 
+    public static DependenciesContainer DependenciesContainer = default!;
+    
     private static bool _running;
     
     public static Task Main()
@@ -34,6 +36,8 @@ public static class Program
             return Task.CompletedTask;
         
         DependencyManager.InitThread();
+        DependenciesContainer = DependencyManager.GetContainer();
+        
         DependencyManager.Register(DependencyManager.GetContainer());
         DependencyManager.Register(container);
         

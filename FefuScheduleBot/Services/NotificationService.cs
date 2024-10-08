@@ -2,6 +2,7 @@
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.ServiceRealisation;
+using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
@@ -21,10 +22,10 @@ public class NotificationService : IStartable
     private readonly Dictionary<string, NotificationChatData> _scheduledChats = [];
     private bool _isStartingSending;
     
-    public void ScheduleSending(GuildSchema guild, string chatId)
+    public void ScheduleSending(GuildSchema guild, string chatId, SchedulingDay day = SchedulingDay.Next)
     {
         _scheduledChats.Add(chatId, guild.Chats[chatId]);
-        _ = StartSending();
+        _ = StartSending(day);
     }
 
     private async Task SendCalendar(string chatId, NotificationChatData chatData, Calendar calendar)
@@ -33,12 +34,12 @@ public class NotificationService : IStartable
         await _discordBotService.SendMessage(chatId, table.ToString());
     }
 
-    private async Task StartSending()
+    private async Task StartSending(SchedulingDay day)
     {
         if (_isStartingSending) return;
         _isStartingSending = true;
 
-        var calendar = await _fefuService.GetTomorrowSchedule();
+        var calendar = await _fefuService.GetSchedule(day);
         
         foreach (var (chatId, chatData) in _scheduledChats)
         {
@@ -49,38 +50,43 @@ public class NotificationService : IStartable
         _isStartingSending = false;
     }
 
-    public void ScheduleGlobalSending(GuildSchema guildSchema)
+    public void ScheduleGlobalSending(GuildSchema guildSchema, SchedulingDay day = SchedulingDay.Next)
     {
         foreach (var (chatId, _) in guildSchema.Chats)
         {
-            ScheduleSending(guildSchema, chatId);
+            ScheduleSending(guildSchema, chatId, day);
         }
     }
     
-    public void ScheduleGlobalSending()
+    public void UpdateGlobalUpdateTime()
     {
+        var time = _fefuService.GetLocalTime();
+        
         foreach (var guildWrapper in _mongoService.GetData<GuildSchema>())
         {
+            if (time < guildWrapper.Data.NextUpdate) continue;
+            
             ScheduleGlobalSending(guildWrapper.Data);
+
+            var nextTime = Utility.GetNextUpdateDateTime();
+            guildWrapper.Mutate(draft =>
+            {
+                draft.NextUpdate = nextTime;
+            });
+            
+            _logger.Info($"Server {guildWrapper.Data.Id} has been update, next time: {nextTime.ToStringWithCulture()}");
         }
+        
     }
 
     public async Task Start()
     {
         await _discordBotService.WaitForReady();
-        var target = _fefuService.GetLocalTime().AddDays(1).Date.AddHours(20);
-        _logger.Info($"Scheduled for a schedule update on {target.ToStringWithCulture("t")}");
         
         while (true)
         {
-            if (target <= _fefuService.GetLocalTime())
-            {
-                ScheduleGlobalSending();
-                target = _fefuService.GetLocalTime().AddDays(1).Date.AddHours(20);
-                _logger.Info($"There has been a schedule update, next time: {target.ToStringWithCulture("t")}");
-            }
-            
-            await Task.Delay(10000);
+            UpdateGlobalUpdateTime();
+            await Task.Delay(new TimeSpan(0, 0, 1, 0));
         }
     }
 }

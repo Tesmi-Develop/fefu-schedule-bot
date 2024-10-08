@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.Rest;
+using DocumentFormat.OpenXml.Bibliography;
 using FefuScheduleBot.Embeds;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.Services;
@@ -22,7 +23,7 @@ public class ForceUpdate : InteractionModuleBase
     
     [DefaultMemberPermissions(GuildPermission.Administrator)]
     [SlashCommand("force_update", "Forcibly calls the current schedule")]
-    public async Task ForceUpdateHandle(UpdateContext context)
+    public async Task ForceUpdateHandle(UpdateContext context, SchedulingDay day)
     {
         await DeferAsync(ephemeral: true);
         
@@ -45,12 +46,12 @@ public class ForceUpdate : InteractionModuleBase
                     return;
                 }
 
-                NotificationService.ScheduleSending(guildData.Data, chatId);
+                NotificationService.ScheduleSending(guildData.Data, chatId, day);
                 break;
             }
             case UpdateContext.Global:
             {
-                NotificationService.ScheduleGlobalSending(guildData.Data);
+                NotificationService.ScheduleGlobalSending(guildData.Data, day);
                 break;
             }
             default:

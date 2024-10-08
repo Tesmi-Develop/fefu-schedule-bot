@@ -120,7 +120,7 @@ public sealed class DiscordBotService : IStartable, IInitializable
     {
         _client.Log += message =>
         {
-            _logger.Debug(message.ToString());
+            _logger.Info(message.ToString());
             return Task.CompletedTask;
         };
         

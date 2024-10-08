@@ -49,6 +49,8 @@ public class TelegramBot : IInitializable
     
     public void Init()
     {
+        if (_environmentData.TelegramToken == "None") return;
+        
         _cancellationToken = new CancellationTokenSource();
         Client = new TelegramBotClient(_environmentData.TelegramToken, cancellationToken: _cancellationToken.Token);
 

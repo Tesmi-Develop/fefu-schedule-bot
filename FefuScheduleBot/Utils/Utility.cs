@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using FefuScheduleBot.Services;
 
 namespace FefuScheduleBot.Utils;
 
@@ -25,5 +26,11 @@ public static class Utility
     public static string ConvertQueryParams(NameValueCollection queryParams)
     {
         return string.Join("&", queryParams.AllKeys.Select(key => $"{key}={queryParams[key]}"));
-    } 
+    }
+
+    public static DateTime GetNextUpdateDateTime()
+    {
+        var fefuService = Program.DependenciesContainer.Resolve<FefuService>();
+        return fefuService.GetLocalTime().AddDays(1).Date.AddHours(20);
+    }
 }

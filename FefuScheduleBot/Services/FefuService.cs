@@ -13,8 +13,13 @@ using Calendar = FefuScheduleBot.Classes.Calendar;
 
 namespace FefuScheduleBot.Services;
 
-[PublicAPI]
-[Service]
+public enum SchedulingDay
+{
+    Current,
+    Next
+}
+
+[Service, PublicAPI]
 public class FefuService : IInitializable
 {
     public readonly int MaxSubgroups = 10;
@@ -53,15 +58,20 @@ public class FefuService : IInitializable
         request.Headers.Add("X-Requested-With", "XMLHttpRequest");
         request.Headers.Add("Cookie", $"_univer_identity={_environmentData.UniverId}; _jwts={_environmentData.Jwts}; LtpaToken2={_environmentData.LtpaToken}");
         
+        _logger.Debug("Sending fefu request");
         var response = await _client.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
         
         try
         {
-            return RepairFefuScheduleData(JsonSerializer.Deserialize<FefuScheduleData>(content)!).Events;
+            var returning = RepairFefuScheduleData(JsonSerializer.Deserialize<FefuScheduleData>(content)!).Events;
+            _logger.Debug("The data was successfully deserialized");
+            
+            return returning;
         }
         catch (Exception e)
         {
+            _logger.Error("An error occurred during data deserialization");
             Console.WriteLine(e);
         }
 
@@ -115,14 +125,14 @@ public class FefuService : IInitializable
         return TimeZoneInfo.ConvertTimeFromUtc(utcTime, _localTimeZone);
     }
 
-    public async Task<Calendar> GetTomorrowSchedule()
+    public async Task<Calendar> GetSchedule(SchedulingDay day)
     {
-        var nextDay = GetLocalTime().AddDays(1);
+        var nextDay = GetLocalTime().AddDays(day == SchedulingDay.Current ? 0 : 1);
         var events = await GetEvents(nextDay);
 
         if (events is not null) return new Calendar(events);
-        events = [];
         
+        events = [];
         _logger.Warning("Failed to retrieve the current schedule");
 
         return new Calendar(events);
