@@ -85,7 +85,15 @@ public class NotificationService : IStartable
         
         while (true)
         {
-            UpdateGlobalUpdateTime();
+            try
+            {
+                UpdateGlobalUpdateTime();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            
             await Task.Delay(new TimeSpan(0, 0, 1, 0));
         }
     }
