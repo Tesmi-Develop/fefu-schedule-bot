@@ -64,7 +64,7 @@ public class NotificationService : IStartable
         
         foreach (var guildWrapper in _mongoService.GetData<GuildSchema>())
         {
-            if (time < guildWrapper.Data.NextUpdate) continue;
+            if (time < _fefuService.ToLocalTime(guildWrapper.Data.NextUpdate)) continue;
             
             ScheduleGlobalSending(guildWrapper.Data);
 
