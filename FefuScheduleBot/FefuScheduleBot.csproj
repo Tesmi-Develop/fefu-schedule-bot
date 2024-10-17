@@ -21,6 +21,7 @@
       <PackageReference Include="Hypercube.Utilities" Version="1.0.0" />
       <PackageReference Include="MongoDB.Driver" Version="2.29.0" />
       <PackageReference Include="SkiaSharp" Version="2.88.7" />
+      <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.7" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.7" />
       <PackageReference Include="Telegram.Bot" Version="21.11.0" />
     </ItemGroup>
