@@ -1,4 +1,7 @@
 ﻿using System.Drawing;
+using Aspose.Cells;
+using Aspose.Cells.Drawing;
+using Aspose.Cells.Rendering;
 using FefuScheduleBot.Classes;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.ServiceRealisation;
@@ -7,6 +10,7 @@ using Hypercube.Dependencies;
 using Hypercube.Mathematics.Vectors;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using Style = FefuScheduleBot.Classes.Style;
 
 namespace FefuScheduleBot.Services;
 
@@ -53,7 +57,7 @@ public class ExcelService : IInitializable
     
     [Dependency] private readonly FefuService _fefuService = default!;
 
-    public async Task<ExcelPackage> GenerateSchedule(WeekType weekType, int subgroup)
+    public async Task<FileInfo> GenerateSchedule(WeekType weekType, int subgroup, string customName = "")
     {
         var time = _fefuService.GetLocalTime();
         var fileName = $"Расписание {time.ToStringWithCulture("d")}";
@@ -63,14 +67,34 @@ public class ExcelService : IInitializable
         
         var events = await _fefuService.GetEvents(week.Start, week.End);
         var calendar = new Calendar(events ?? []).UseSubgroup(subgroup);
-        var fileInfo = new FileInfo($"{fileName}.xlsx");
+        var fileInfo = new FileInfo(customName == string.Empty ? $"{fileName}.xlsx" : $"{customName}.xlsx");
 
         if (File.Exists(fileInfo.FullName))
             File.Delete(fileInfo.FullName);
 
-        return GenerateTable(fileInfo, calendar, week);
+        return GenerateTable(fileInfo, calendar, week).File;
     }
 
+    public async Task<FileInfo> GenerateScheduleImage(WeekType weekType, int subgroup)
+    {
+        var time = _fefuService.GetLocalTime();
+        var excel = await GenerateSchedule(weekType, subgroup, $"{time.ToStringWithCulture("d")}-table");
+        var book = new Workbook(excel.OpenRead());
+        var sheet = book.Worksheets[0];
+
+        var imgOptions = new ImageOrPrintOptions
+        {
+            ImageType = ImageType.Jpeg,
+            OnePagePerSheet = true,
+        };
+
+        var fileName = $"Расписание {time.ToStringWithCulture("d")}.jpeg";
+        var render = new SheetRender(sheet, imgOptions);
+        render.ToImage(0, fileName);
+        
+        return new FileInfo(fileName);
+    }
+    
     private ExcelPackage GenerateTable(FileInfo file, Calendar calendar, Week week)
     {
         var startPosition = new Vector2i(1, 1);

@@ -25,8 +25,8 @@ public class GenerateTable : InteractionModuleBase
             var user = Context.User;
             var table = await ExcelService.GenerateSchedule(weekType, subgroup);
 
-            await user.SendFileAsync(filePath: table.File.FullName);
-            File.Delete(table.File.FullName);
+            await user.SendFileAsync(filePath: table.FullName);
+            File.Delete(table.FullName);
         }
         catch (Exception e)
         {

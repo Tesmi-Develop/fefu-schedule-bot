@@ -13,18 +13,24 @@ public class SendSchedule : IChainState
     [Dependency] private readonly TelegramBot _bot = default!;
     [Dependency] private readonly ExcelService _excelService = default!;
 
-    private async Task StartSending(WeekType weekType, int subgroup, CallbackQuery callbackQuery)
+    private async Task StartSending(WeekType weekType, int subgroup, ScheduleFormat format, CallbackQuery callbackQuery)
     {
-        var table = await _excelService.GenerateSchedule(weekType, subgroup);
+        var table = format switch
+        {
+            ScheduleFormat.Xlsx => await _excelService.GenerateSchedule(weekType, subgroup),
+            ScheduleFormat.Jpeg => await _excelService.GenerateScheduleImage(weekType, subgroup),
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+        };
 
-        await using Stream stream = table.File.OpenRead();
-        await _bot.Client.SendDocumentAsync(callbackQuery.Message!.Chat, InputFile.FromStream(stream, table.File.Name));
-        File.Delete(table.File.FullName);
+        await using Stream stream = table.OpenRead();
+        await _bot.Client.SendDocumentAsync(callbackQuery.Message!.Chat, InputFile.FromStream(stream, table.Name));
+        File.Delete(table.FullName);
     }
     
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
     {
         var parsedData = Utility.ParseQueryParams(data);
+        var format = (ScheduleFormat)Enum.Parse(typeof(ScheduleFormat), parsedData["Format"]!);
         var weekType = (WeekType)Enum.Parse(typeof(WeekType), parsedData["WeekType"]!);
         var subgroup = int.Parse(parsedData["Subgroup"]!);
         
@@ -33,6 +39,6 @@ public class SendSchedule : IChainState
             callbackQuery.Message.MessageId,
             "Расписание будет отправлено в ближайшее время"
             );
-        await StartSending(weekType, subgroup, callbackQuery);
+        await StartSending(weekType, subgroup, format, callbackQuery);
     }
 }
