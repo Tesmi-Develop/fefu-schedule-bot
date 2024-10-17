@@ -19,7 +19,7 @@
       <PackageReference Include="Hypercube.Mathematics" Version="1.0.0" />
       <PackageReference Include="Hypercube.Utilities" Version="1.0.0" />
       <PackageReference Include="MongoDB.Driver" Version="2.29.0" />
-      <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9-preview.1.1" />
+      <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.0.0-preview.1.8" />
       <PackageReference Include="Telegram.Bot" Version="21.11.0" />
     </ItemGroup>
 
