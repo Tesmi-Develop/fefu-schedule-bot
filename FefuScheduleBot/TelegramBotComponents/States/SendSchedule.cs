@@ -23,7 +23,14 @@ public class SendSchedule : IChainState
         };
 
         await using Stream stream = table.OpenRead();
-        await _bot.Client.SendDocumentAsync(callbackQuery.Message!.Chat, InputFile.FromStream(stream, table.Name));
+        
+        _ = format switch
+        {
+            ScheduleFormat.Jpeg => await _bot.Client.SendPhotoAsync(callbackQuery.Message!.Chat,
+                InputFile.FromStream(stream, table.Name)),
+            _ => await _bot.Client.SendDocumentAsync(callbackQuery.Message!.Chat, InputFile.FromStream(stream, table.Name)),
+        };
+        
         File.Delete(table.FullName);
     }
     
