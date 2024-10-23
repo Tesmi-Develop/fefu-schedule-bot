@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Immutable;
 using BetterConsoles.Tables;
 using BetterConsoles.Tables.Configuration;
 using BetterConsoles.Tables.Models;
@@ -51,7 +52,7 @@ public class Calendar : IEnumerable<CalendarPairList>
         }
     }
     
-    public Dictionary<string, Dictionary<string, List<FefuEvent>>> Days { get; } = new();
+    public SortedDictionary<string, Dictionary<string, List<FefuEvent>>> Days { get; } = new();
 
     private const int ExcludeDiscipline = 13933; // PE
 
