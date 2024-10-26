@@ -52,7 +52,7 @@ public class Calendar : IEnumerable<CalendarPairList>
         }
     }
     
-    public SortedDictionary<string, Dictionary<string, List<FefuEvent>>> Days { get; } = new();
+    public SortedDictionary<DateTime, Dictionary<string, List<FefuEvent>>> Days { get; } = new();
 
     private const int ExcludeDiscipline = 13933; // PE
 
@@ -97,7 +97,7 @@ public class Calendar : IEnumerable<CalendarPairList>
 
         foreach (var (day, times) in Days)
         {
-            var nextColumn = new List<string> { day };
+            var nextColumn = new List<string> { day.ToStringWithCulture("d") };
 
             columns.Add(nextColumn);
             
@@ -119,7 +119,7 @@ public class Calendar : IEnumerable<CalendarPairList>
     private void AddEvent(FefuEvent @event)
     {
         var period = GenerateTimePeriod(@event.Start, @event.End);
-        var day = @event.Start.Date.ToStringWithCulture("d");
+        var day = @event.Start.Date;
         
         if (!Days.TryGetValue(day, out var times))
         {
@@ -196,7 +196,7 @@ public class Calendar : IEnumerable<CalendarPairList>
         {
             foreach (var (time, events) in times)
             {
-                yield return new CalendarPairList(events, day, time);
+                yield return new CalendarPairList(events, day.ToStringWithCulture("d"), time);
             }
         }
     }
