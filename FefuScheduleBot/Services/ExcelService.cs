@@ -107,7 +107,7 @@ public class ExcelService : IInitializable
         var firstPoint = startPosition;
         AddLefSide(sheet, ref startPosition);
         AddHat(sheet, ref startPosition, week);
-        FillTable(sheet, ref startPosition, calendar);
+        FillTable(sheet, ref startPosition, calendar, week);
         
         SetBorder(sheet.Cells[firstPoint.Y, firstPoint.X, startPosition.Y, startPosition.X]);
         
@@ -166,11 +166,12 @@ public class ExcelService : IInitializable
         range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
     }
         
-    private void FillTable(ExcelWorksheet sheet, ref Vector2i startPosition, Calendar content)
+    private void FillTable(ExcelWorksheet sheet, ref Vector2i startPosition, Calendar content, Week week)
     {
         var origY = startPosition.Y;
+        startPosition += new Vector2i((content.Days.Keys.First() - week.Start.Date).Days, 0);
         
-        foreach (var (_, times) in content.Days)
+        foreach (var (day, times) in content.Days)
         {
             startPosition = startPosition.WithY(origY);
             

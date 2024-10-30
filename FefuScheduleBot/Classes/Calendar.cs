@@ -116,25 +116,6 @@ public class Calendar : IEnumerable<CalendarPairList>
         return columns;
     }
     
-    private void AddEvent(FefuEvent @event)
-    {
-        var period = GenerateTimePeriod(@event.Start, @event.End);
-        var day = @event.Start.Date;
-        
-        if (!Days.TryGetValue(day, out var times))
-        {
-            times = new();
-            Days[day] = times;
-        }
-        
-        if (!times.TryGetValue(period, out var events))
-        {
-            events = [];
-            times[period] = events;
-        }
-        
-        events.Add(@event);
-    }
 
     public Calendar UseSubgroup(int subgroup)
     {
@@ -199,6 +180,26 @@ public class Calendar : IEnumerable<CalendarPairList>
                 yield return new CalendarPairList(events, day.ToStringWithCulture("d"), time);
             }
         }
+    }
+    
+    private void AddEvent(FefuEvent @event)
+    {
+        var period = GenerateTimePeriod(@event.Start, @event.End);
+        var day = @event.Start.Date;
+        
+        if (!Days.TryGetValue(day, out var times))
+        {
+            times = new();
+            Days[day] = times;
+        }
+        
+        if (!times.TryGetValue(period, out var events))
+        {
+            events = [];
+            times[period] = events;
+        }
+        
+        events.Add(@event);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
