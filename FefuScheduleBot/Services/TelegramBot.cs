@@ -15,6 +15,7 @@ public class TelegramBot : IInitializable
 {
     [Dependency] private readonly EnvironmentData _environmentData = default!;
     [Dependency] private readonly DependenciesContainer _container = default!;
+    [Dependency] private readonly StatsService _statsService = default!;
     
     private readonly Logger _logger = default!;
     
@@ -37,9 +38,29 @@ public class TelegramBot : IInitializable
     private async Task OnMessage(Message message, UpdateType updateType)
     {
         if (message.Text == null) return;
-        if (!message.Text.StartsWith("/start")) return;
         
-        await OnStartCommand(message);
+        if (message.Text.StartsWith("/start"))
+        {
+            await OnStartCommand(message);
+            return;
+        }
+
+        if (message.Text.StartsWith("/stats"))
+        {
+            await OnStatisticsCommand(message);
+            return;
+        }
+    }
+
+    private async Task OnStatisticsCommand(Message message)
+    {
+        var statistics = _statsService.CollectInfo();
+        await Client.SendTextMessageAsync(message.Chat.Id, 
+            "\ud83d\udcc8 Статистика запросов \ud83d\udcc8\n\n" +
+            $"Всего: {statistics.TotalUsage}\n" +
+            $"Неделя: {statistics.WeekUsage}\n" +
+            $"Сегодня: {statistics.TodayUsage}"
+            );
     }
 
     private async Task OnStartCommand(Message message)

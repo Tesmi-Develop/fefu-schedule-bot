@@ -22,6 +22,7 @@ public enum SchedulingDay
 [Service, PublicAPI]
 public class FefuService : IInitializable
 {
+    public event Action? CompletedRequest; 
     public readonly int MaxSubgroups = 10;
     
     [Dependency] private readonly EnvironmentData _environmentData = default!;
@@ -66,6 +67,7 @@ public class FefuService : IInitializable
         {
             var returning = RepairFefuScheduleData(JsonSerializer.Deserialize<FefuScheduleData>(content)!).Events;
             _logger.Debug("The data was successfully deserialized");
+            CompletedRequest?.Invoke();
             
             return returning;
         }
