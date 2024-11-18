@@ -20,7 +20,7 @@ public class StatsService : IInitializable
         
         data.Mutate((draft) =>
         {
-            draft.Time = _fefuService.GetLocalTime();
+            draft.Time = _fefuService.GetLocalTime().ToUniversalTime();
         });
         
         _logger.Debug("Added new log in stats");
@@ -49,5 +49,6 @@ public class StatsService : IInitializable
     public void Init()
     {
         _fefuService.CompletedRequest += MakeLog;
+        CollectInfo();
     }
 }
