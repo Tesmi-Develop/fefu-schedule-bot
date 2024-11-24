@@ -39,7 +39,7 @@ public class StatsService : IInitializable
             var studyWeek = _fefuService.GetStudyWeek(convertedTime);
             
             totalUsage++;
-            weekUsage += studyWeek.End.AddDays(1) >= currentTime ? 1 : 0;
+            weekUsage += studyWeek.End.AddDays(2).Date >= currentTime ? 1 : 0;
             todayUsage += convertedTime.Date == currentTime.Date ? 1 : 0;
         }
 
@@ -49,6 +49,5 @@ public class StatsService : IInitializable
     public void Init()
     {
         _fefuService.CompletedRequest += MakeLog;
-        CollectInfo();
     }
 }
