@@ -20,7 +20,7 @@ public class StatsService : IInitializable
         
         data.Mutate((draft) =>
         {
-            draft.Time = _fefuService.GetLocalTime().ToUniversalTime();
+            draft.Time = DateTime.Now.ToUniversalTime();
         });
         
         _logger.Debug("Added new log in stats");
@@ -35,11 +35,11 @@ public class StatsService : IInitializable
 
         foreach (var log in _mongoService.GetData<StatSchema>())
         {
-            var convertedTime = _fefuService.ToLocalTime(log.Data.Time);
-            var studyWeek = _fefuService.GetStudyWeek(convertedTime);
+            var convertedTime = _fefuService.ToLocalTime(log.Data.Time, true);
+            var studyWeek = _fefuService.GetStudyWeek(convertedTime, true);
             
             totalUsage++;
-            weekUsage += studyWeek.End.AddDays(2).Date >= currentTime ? 1 : 0;
+            weekUsage += studyWeek.End.AddDays(1).Date >= currentTime ? 1 : 0;
             todayUsage += convertedTime.Date == currentTime.Date ? 1 : 0;
         }
 

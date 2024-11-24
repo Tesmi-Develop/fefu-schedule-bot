@@ -101,19 +101,21 @@ public class FefuService : IInitializable
         return GetStudyWeek(GetLocalTime());
     }
     
-    public Week GetStudyWeek(DateTime date)
+    public Week GetStudyWeek(DateTime date, bool useSunday = false)
     {
         var myCal = CultureInfo.InvariantCulture.Calendar;
         var dayOfWeek = myCal.GetDayOfWeek(date);
 
-        if (dayOfWeek == DayOfWeek.Sunday)
-        {
-            var first = date.AddDays(1).Date;
-            var end = first.AddDays(5).Date;
-            return new Week(first, end);
-        }
+        if (dayOfWeek != DayOfWeek.Sunday)
+            return new Week(date.AddDays(-((int)dayOfWeek - 1)).Date, date.AddDays(6 + (useSunday ? 1 : 0) - (int)dayOfWeek).Date);
+        
+        if (useSunday)
+            return new Week(date.AddDays(-6).Date, date.Date);
+            
+        var first = date.AddDays(1).Date;
+        var end = first.AddDays(5).Date;
+        return new Week(first, end);
 
-        return new Week(date.AddDays(-((int)dayOfWeek - 1)), date.AddDays(6 - (int)dayOfWeek));
     }
 
     public DateTime GetLocalTime()
@@ -121,10 +123,9 @@ public class FefuService : IInitializable
         return ToLocalTime(DateTime.Now);
     }
 
-    public DateTime ToLocalTime(DateTime time)
+    public DateTime ToLocalTime(DateTime time, bool isUtc = false)
     {
-        var utcTime = time.ToUniversalTime();
-        return TimeZoneInfo.ConvertTimeFromUtc(utcTime, _localTimeZone);
+        return TimeZoneInfo.ConvertTimeFromUtc(isUtc ? time : time.ToUniversalTime(), _localTimeZone);
     }
 
     public async Task<Calendar> GetSchedule(SchedulingDay day)
