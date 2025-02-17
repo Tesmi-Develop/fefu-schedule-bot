@@ -36,6 +36,10 @@ public class ExcelService : IInitializable
         { 9925, "ОСН. АЛГ. И ПРОГ" },
         { 19986, "ОСН. ЦИФ. ГРАМ" },
         { 34077, "CОЦ-ПСИХ. ТЕСТ" },
+        { 5279, "ДИСК. МАТ."},
+        { 8945, "АНАЛИТ. ГЕОМЕТРИЯ"},
+        { 5371, "ОПД"},
+        { 65, "БЖД"},
     };
 
     private readonly Dictionary<string, string> _abbreviationTypeLessons = new()

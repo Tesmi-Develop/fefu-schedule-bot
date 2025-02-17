@@ -54,7 +54,7 @@ public class Calendar : IEnumerable<CalendarPairList>
     
     public SortedDictionary<DateTime, Dictionary<string, List<FefuEvent>>> Days { get; } = new();
 
-    private const int ExcludeDiscipline = 13933; // PE
+    private List<int> _excludeDiscipline = [13933, 116]; // PE
 
     private static string GenerateTimePeriod(DateTime start, DateTime end)
     {
@@ -125,7 +125,7 @@ public class Calendar : IEnumerable<CalendarPairList>
         {
             foreach (var @event in events)
             {
-                if (@event.Subgroup != string.Empty && @event.Subgroup != subgroup.ToString() && @event.DisciplineId != ExcludeDiscipline)
+                if (@event.Subgroup != string.Empty && @event.Subgroup != subgroup.ToString() &&  !_excludeDiscipline.Contains(@event.DisciplineId))
                     continue;
                     
                 newCalendar.AddEvent(@event);
