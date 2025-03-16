@@ -30,7 +30,7 @@ public class RequestFormat : IChainState
     }
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
     {
-        await _bot.Client.EditMessageTextAsync(
+        await _bot.Client.EditMessageText(
             callbackQuery.Message!.Chat,
             callbackQuery.Message.MessageId,
             "В каком формате вы хотите расписание?",

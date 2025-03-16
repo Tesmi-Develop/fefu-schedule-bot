@@ -35,6 +35,6 @@ public class RequestSubgroup : IStartState
             inlineMarkup.AddNewRow(buttons.ToArray());
         }
         
-        await _bot.Client.SendTextMessageAsync(id, "Выберите подгруппу", replyMarkup: inlineMarkup);
+        await _bot.Client.SendMessage(id, "Выберите подгруппу", replyMarkup: inlineMarkup);
     }
 }

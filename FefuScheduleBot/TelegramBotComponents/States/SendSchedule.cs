@@ -41,7 +41,7 @@ public class SendSchedule : IChainState
         var weekType = (WeekType)Enum.Parse(typeof(WeekType), parsedData["WeekType"]!);
         var subgroup = int.Parse(parsedData["Subgroup"]!);
         
-        await _bot.Client.EditMessageTextAsync(
+        await _bot.Client.EditMessageText(
             callbackQuery.Message!.Chat,
             callbackQuery.Message.MessageId,
             "Расписание будет отправлено в ближайшее время"

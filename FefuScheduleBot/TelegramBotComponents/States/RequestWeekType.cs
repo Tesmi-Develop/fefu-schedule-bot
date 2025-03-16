@@ -24,7 +24,7 @@ public class RequestWeekType : IChainState
     }
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
     {
-        await _bot.Client.EditMessageTextAsync(
+        await _bot.Client.EditMessageText(
             callbackQuery.Message!.Chat,
             callbackQuery.Message.MessageId,
             "На какую неделю вы хотите расписание?",
