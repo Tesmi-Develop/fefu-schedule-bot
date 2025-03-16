@@ -11,7 +11,7 @@ using UpdateType = Telegram.Bot.Types.Enums.UpdateType;
 namespace FefuScheduleBot.Services;
 
 [Service]
-public class TelegramBot : IInitializable
+public class TelegramBot : IStartable
 {
     [Dependency] private readonly EnvironmentData _environmentData = default!;
     [Dependency] private readonly DependenciesContainer _container = default!;
@@ -55,7 +55,7 @@ public class TelegramBot : IInitializable
     private async Task OnStatisticsCommand(Message message)
     {
         var statistics = _statsService.CollectInfo();
-        await Client.SendTextMessageAsync(message.Chat.Id, 
+        await Client.SendMessage(message.Chat.Id, 
             "\ud83d\udcc8 Статистика запросов \ud83d\udcc8\n\n" +
             $"Всего: {statistics.TotalUsage}\n" +
             $"Неделя: {statistics.WeekUsage}\n" +
@@ -68,7 +68,7 @@ public class TelegramBot : IInitializable
         await _generator.Start(message.Chat);
     }
     
-    public void Init()
+    public async Task Start()
     {
         if (_environmentData.TelegramToken == "None") return;
         
@@ -80,6 +80,7 @@ public class TelegramBot : IInitializable
         
         ConnectToEvents();
         
-        _logger.Info("Telegram bot started");
+        var me = await Client.GetMe();
+        _logger.Info($"@{me.Username} is running...");
     }
 }
