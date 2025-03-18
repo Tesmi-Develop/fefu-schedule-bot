@@ -26,9 +26,9 @@ public class SendSchedule : IChainState
         
         _ = format switch
         {
-            ScheduleFormat.Jpeg => await _bot.Client.SendPhotoAsync(callbackQuery.Message!.Chat,
+            ScheduleFormat.Jpeg => await _bot.Client.SendPhoto(callbackQuery.Message!.Chat,
                 InputFile.FromStream(stream, table.Name)),
-            _ => await _bot.Client.SendDocumentAsync(callbackQuery.Message!.Chat, InputFile.FromStream(stream, table.Name)),
+            _ => await _bot.Client.SendDocument(callbackQuery.Message!.Chat, InputFile.FromStream(stream, table.Name)),
         };
         
         File.Delete(table.FullName);

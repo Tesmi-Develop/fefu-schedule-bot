@@ -50,7 +50,7 @@ public class FefuService : IInitializable
         var endDate = end.Date.ToString(CultureInfo.CurrentCulture).Split(" ")[0];
         
         var request = new HttpRequestMessage();
-        request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups[]=6534&ppsId=&facilityId=0");
+        request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups[]=6534&ppsGuid=&facilityId=0");
         request.Method = HttpMethod.Get;
 
         request.Headers.Add("Accept", "application/json, text/javascript, */*; q=0.01");
