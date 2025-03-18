@@ -41,23 +41,28 @@ public class FefuService : IInitializable
     
     public async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
     {
+        start = start.AddDays(-1);
         end = end.AddDays(1);
 
         if (start >= end)
             throw new ArgumentException("start cannot be >= end");
         
-        var startDate = start.Date.ToString(CultureInfo.CurrentCulture).Split(" ")[0];
-        var endDate = end.Date.ToString(CultureInfo.CurrentCulture).Split(" ")[0];
+        var startDate = start.Date.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+        var endDate = end.Date.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
         
         var request = new HttpRequestMessage();
-        request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups[]=6534&ppsGuid=&facilityId=0");
+        
+        var client = new HttpClient();
+        request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups%5B%5D=6534&ppsGuid=&facilityId=0");
         request.Method = HttpMethod.Get;
 
         request.Headers.Add("Accept", "application/json, text/javascript, */*; q=0.01");
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0");
-        request.Headers.Add("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3");
+        request.Headers.Add("Accept-Encoding", "gzip, deflate, br, zstd");
+        request.Headers.Add("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+        request.Headers.Add("Connection", "keep-alive");
+        request.Headers.Add("Cookie", $"_univer_identity={_environmentData.UniverId};_jwts={_environmentData.Jwts};LtpaToken2={_environmentData.LtpaToken};");
         request.Headers.Add("X-Requested-With", "XMLHttpRequest");
-        request.Headers.Add("Cookie", $"_univer_identity={_environmentData.UniverId}; _jwts={_environmentData.Jwts}; LtpaToken2={_environmentData.LtpaToken}");
         
         _logger.Debug("Sending fefu request");
         var response = await _client.SendAsync(request);
@@ -75,6 +80,7 @@ public class FefuService : IInitializable
         {
             _logger.Error("An error occurred during data deserialization");
             Console.WriteLine(e);
+            Console.WriteLine(content);
         }
 
         return null;
