@@ -26,4 +26,8 @@ public sealed class EnvironmentData
     [EnvironmentSpacing]
     
     public readonly string TelegramToken = default!;
+    
+    [EnvironmentSpacing]
+    
+    public readonly string ExcludeList = "None";
 }

@@ -13,16 +13,16 @@ namespace FefuScheduleBot.Services;
 [Service]
 public class TelegramBot : IStartable
 {
+    public TelegramBotClient Client { get; private set; } = default!;
+    
     [Dependency] private readonly EnvironmentData _environmentData = default!;
     [Dependency] private readonly DependenciesContainer _container = default!;
     [Dependency] private readonly StatsService _statsService = default!;
-    
     private readonly Logger _logger = default!;
     
     private CancellationTokenSource _cancellationToken = default!;
     private ScheduleGenerator _generator = default!;
-    public TelegramBotClient Client { get; private set; } = default!;
-
+    private string[] _excludeList = [];
     private void ConnectToEvents()
     {
         Client.OnMessage += OnMessage;
@@ -38,6 +38,9 @@ public class TelegramBot : IStartable
     private async Task OnMessage(Message message, UpdateType updateType)
     {
         if (message.Text == null) return;
+
+        if (_excludeList.Length > 0 && message.Chat.Username is not null && _excludeList.Contains(message.Chat.Username))
+            return;
         
         if (message.Text.StartsWith("/start"))
         {
@@ -71,6 +74,9 @@ public class TelegramBot : IStartable
     public async Task Start()
     {
         if (_environmentData.TelegramToken == "None") return;
+
+        if (_environmentData.ExcludeList != "None")
+            _excludeList = _environmentData.ExcludeList.Split(" ");
         
         _cancellationToken = new CancellationTokenSource();
         Client = new TelegramBotClient(_environmentData.TelegramToken, cancellationToken: _cancellationToken.Token);

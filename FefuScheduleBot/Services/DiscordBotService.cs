@@ -197,6 +197,7 @@ public sealed class DiscordBotService : IStartable, IInitializable
     
     public async Task Start()
     {
+        if (_environmentData.DiscordToken == "None") return;
         InitDependency();
         ConnectToEvents();
         
