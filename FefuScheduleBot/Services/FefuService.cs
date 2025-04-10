@@ -116,6 +116,7 @@ public class FefuService : IInitializable
             table.Add(line.Split('\t').ToList());
         }
 
+        var culture = new CultureInfo("ru-RU");
         table.RemoveAt(0);
         
         foreach (var line in table)
@@ -124,13 +125,13 @@ public class FefuService : IInitializable
             if (groupName != "Б9124-09.03.04") 
                 continue;
             
-            var data = DateTime.Parse(line[2]);
+            var data = DateTime.Parse(line[2], culture);
             if (data < startData || data > endData)
                 continue;
             
             var subgroup = line[1];
-            var startTime = TimeSpan.Parse(line[3]);
-            var endTime = TimeSpan.Parse(line[4]);
+            var startTime = TimeSpan.Parse(line[3], culture);
+            var endTime = TimeSpan.Parse(line[4], culture);
             var startFullTime = data + startTime;
             var endFullTime = data + endTime;
             var classroom = line[5];
