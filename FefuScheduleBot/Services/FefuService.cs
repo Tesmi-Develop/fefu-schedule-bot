@@ -39,7 +39,7 @@ public class FefuService : IInitializable
         return GetEvents(day, day);
     }
     
-    /*public async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
+    public async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
     {
         start = start.AddDays(-1);
         end = end.AddDays(1);
@@ -56,7 +56,7 @@ public class FefuService : IInitializable
         request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups%5B%5D=6534&ppsGuid=&facilityId=0");
         request.Method = HttpMethod.Get;
 
-        request.Headers.Add("Accept", "application/json, text/javascript, #1#*; q=0.01");
+        request.Headers.Add("Accept", "application/json, text/javascript, */*; q=0.01");
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0");
         request.Headers.Add("Accept-Encoding", "gzip, deflate, br, zstd");
         request.Headers.Add("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
@@ -84,75 +84,6 @@ public class FefuService : IInitializable
         }
 
         return null;
-    }*/
-
-    public async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
-    {
-        if (start >= end)
-            throw new ArgumentException("start cannot be >= end");
-        
-        var request = new HttpRequestMessage();
-        
-        var client = new HttpClient();
-        request.RequestUri = new Uri("https://schedule.edwardcode.net/schedule-imkt.txt");
-        request.Method = HttpMethod.Get;
-
-        _logger.Debug("Sending fefu request");
-        
-        var response = await _client.SendAsync(request);
-        var content = await response.Content.ReadAsStringAsync();
-        
-        return ParseData(content,  start, end).ToArray();
-    }
-
-    private List<FefuEvent> ParseData(string input, DateTime startData, DateTime endData)
-    {
-        var result = new List<FefuEvent>();
-        var table = new List<List<string>>();
-        var lines = input.Split('\n');
-
-        foreach (var line in lines)
-        {
-            table.Add(line.Split('\t').ToList());
-        }
-
-        table.RemoveAt(0);
-        
-        foreach (var line in table)
-        {
-            var groupName = line[0];
-            if (groupName != "Б9124-09.03.04") 
-                continue;
-            
-            var data = DateTime.Parse(line[2]);
-            if (data < startData || data > endData)
-                continue;
-            
-            var subgroup = line[1];
-            var startTime = TimeSpan.Parse(line[3]);
-            var endTime = TimeSpan.Parse(line[4]);
-            var startFullTime = data + startTime;
-            var endFullTime = data + endTime;
-            var classroom = line[5];
-            var title = line[6];
-            var ppsLoad = line[8];
-            var order = (int)((startTime - new TimeSpan(8, 30, 0)) / new TimeSpan(1, 30, 0) + 1);
-            
-            var newEvent = new FefuEvent
-            {
-                Title = title,
-                Classroom = classroom,
-                Subgroup = subgroup,
-                PpsLoad = ppsLoad,
-                Start = startFullTime,
-                End = endFullTime,
-                Order = order,
-            };
-
-            result.Add(newEvent);
-        }
-
-        return result;
     }
 
     private FefuScheduleData RepairFefuScheduleData(FefuScheduleData data)
