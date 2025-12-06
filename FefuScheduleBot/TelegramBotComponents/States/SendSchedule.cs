@@ -32,7 +32,9 @@ public class SendSchedule : IChainState
                 await streamTable.CopyToAsync(resultStream);
                 break;
             case ScheduleFormat.Jpeg:
-                await _imageService.GenerateStreamFromTable(streamTable).CopyToAsync(resultStream);
+                var tableImage = _imageService.GenerateStreamFromTable(streamTable);
+                tableImage = _imageService.ApplyBackground(tableImage);
+                await tableImage.CopyToAsync(resultStream);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(format), format, null);
