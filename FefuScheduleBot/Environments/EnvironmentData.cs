@@ -12,13 +12,6 @@ public sealed class EnvironmentData
     
     [EnvironmentSpacing]
     
-    [EnvironmentComment("Bot token")]
-    public readonly string DiscordToken = default!;
-    [EnvironmentComment("Guild id for bot testing")]
-    public readonly string DiscordDevelopmentGuildId = default!;
-
-    [EnvironmentSpacing]
-    
     public readonly string UniverId = default!;
     public readonly string Jwts = default!;
     public readonly string LtpaToken = default!;

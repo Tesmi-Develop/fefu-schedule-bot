@@ -1,27 +1,17 @@
 ﻿using System.Drawing;
-using Aspose.Cells;
-using Aspose.Cells.Drawing;
-using Aspose.Cells.Rendering;
 using FefuScheduleBot.Classes;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
 using Hypercube.Mathematics.Vectors;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
+using Spire.Xls;
 using Style = FefuScheduleBot.Classes.Style;
 
 namespace FefuScheduleBot.Services;
 
-public enum WeekType
-{
-    Current,
-    Next
-}
-
 [Service]
-public class ExcelService : IInitializable
+public class ExcelService
 {
     private readonly Dictionary<int, string> _abbreviations = new()
     {
@@ -46,7 +36,7 @@ public class ExcelService : IInitializable
     private readonly Dictionary<string, string> _abbreviationTypeLessons = new()
     {
         {"Лабораторные работы", "Лабораторная"},
-        {"Практические занятия", "Практическая"},
+        {"Практические занятия", "Практическое"},
         {"Лекционные занятия", "Лекция"}
     };
     
@@ -58,89 +48,80 @@ public class ExcelService : IInitializable
         {"Мероприятие", Color.FromArgb(146, 208, 80)}
     };
 
-    private readonly int _width = Calendar.CountWorkingDays + 2;
+    private readonly int _width = Schedule.CountWorkingDays + 2;
     
     [Dependency] private readonly FefuService _fefuService = default!;
 
-    public async Task<FileInfo> GenerateSchedule(WeekType weekType, int subgroup, string customName = "")
+   /* public async Task<FileInfo> GenerateSchedule(WeekType weekType, Calendar calendar, string customName = "")
     {
         var time = _fefuService.GetLocalTime();
-        var fileName = $"Расписание {time.ToStringWithCulture("d")}";
         var week = weekType == WeekType.Current
             ? _fefuService.GetStudyWeek() 
             : _fefuService.GetStudyWeek(_fefuService.GetLocalTime().AddDays(7));
         
         var events = await _fefuService.GetEvents(week.Start, week.End);
-        var calendar = new Calendar(events ?? []).UseSubgroup(subgroup);
         var fileInfo = new FileInfo(customName == string.Empty ? $"{fileName}.xlsx" : $"{customName}.xlsx");
 
         if (File.Exists(fileInfo.FullName))
             File.Delete(fileInfo.FullName);
 
         return GenerateTable(fileInfo, calendar, week).File;
-    }
+    }*/
 
-    public async Task<FileInfo> GenerateScheduleImage(WeekType weekType, int subgroup)
+    public void SaveTableToFile(Worksheet worksheet, string name = "")
     {
-        var time = _fefuService.GetLocalTime();
-        var excel = await GenerateSchedule(weekType, subgroup, $"{time.ToStringWithCulture("d")}-table");
-        var book = new Workbook(excel.OpenRead());
-        var sheet = book.Worksheets[0];
-
-        var imgOptions = new ImageOrPrintOptions
-        {
-            ImageType = ImageType.Jpeg,
-            OnePagePerSheet = true,
-        };
-
-        var fileName = $"Расписание {time.ToStringWithCulture("d")}.jpeg";
-        var render = new SheetRender(sheet, imgOptions);
-        render.ToImage(0, fileName);
+        var fileName = name == string.Empty
+            ? $"Расписание {_fefuService.GetLocalTime().ToStringWithCulture("d")}.xlsx"
+            : $"{name}.xlsx";
         
-        return new FileInfo(fileName);
+        if (File.Exists(fileName))
+            File.Delete(fileName);
+        
+        worksheet.SaveToFile(fileName, string.Empty);
     }
     
-    private ExcelPackage GenerateTable(FileInfo file, Calendar calendar, Week week)
+    public MemoryStream GenerateStreamTable(Schedule schedule)
     {
         var startPosition = new Vector2i(1, 1);
-        var excel = new ExcelPackage(file);
-        var sheet = excel.Workbook.Worksheets.Add("Лист 1");
+        using var workbook = new Workbook();
+        var sheet = workbook.Worksheets[0];
         
         AddLabels(sheet, ref startPosition);
         AddDescription(sheet, ref startPosition);
 
         var firstPoint = startPosition;
         AddLefSide(sheet, ref startPosition);
-        AddHat(sheet, ref startPosition, week);
-        FillTable(sheet, ref startPosition, calendar, week);
+        AddHat(sheet, ref startPosition, schedule);
+        var endPosition = FillTable(sheet, ref startPosition, schedule, schedule.Week);
         
-        SetBorder(sheet.Cells[firstPoint.Y, firstPoint.X, startPosition.Y, startPosition.X]);
+        SetBorder(sheet.Range[firstPoint.Y, firstPoint.X, endPosition.Y, endPosition.X]);
         
-        sheet.Cells.AutoFitColumns();
-        excel.Save();
+        sheet.Range.AutoFitColumns();
         
-        return excel;
+        var stream = new MemoryStream();
+        workbook.SaveToStream(stream, FileFormat.Version2016);
+        return stream;
     }
 
-    private void ApplyStyle(ExcelRange range, Style style)
+    private void ApplyStyle(CellRange range, Style style)
     {
         range.Style.HorizontalAlignment = style.HorizontalAlignment;
-        range.Style.Font.Bold = style.TextBold;
-        range.Style.Font.Color.SetColor(style.TextColor);
+        range.Style.Font.IsBold = style.TextBold;
+        range.Style.Font.Color = style.TextColor;
     }
     
-    private void AddDescription(ExcelWorksheet sheet, ref Vector2i startPosition)
+    private void AddDescription(Worksheet sheet, ref Vector2i startPosition)
     {
-        var range = sheet.Cells[startPosition.Y, startPosition.X, startPosition.Y, Calendar.CountWorkingDays + 2];
+        var range = sheet.Range[startPosition.Y, startPosition.X, startPosition.Y, Schedule.CountWorkingDays + 2];
         
-        range.Merge = true;
-        range.Value = "Сгенерировано ботом (автор Tesmi)";
+        range.Merge();
+        range.Value = "Сгенерировано автоматически (автор Tesmi)";
         ApplyStyle(range, Style.Hat);
         
         startPosition += new Vector2i(0, 1);
     }
 
-    private void AddLabels(ExcelWorksheet sheet, ref Vector2i startPosition)
+    private void AddLabels(Worksheet sheet, ref Vector2i startPosition)
     {
         var offset = 2;
         var firstPoint = startPosition;
@@ -148,107 +129,102 @@ public class ExcelService : IInitializable
         foreach (var (type, color) in _typeLessonByColors)
         {
             var abbreviation = _abbreviationTypeLessons.GetValueOrDefault(type, type);
-            var range = sheet.Cells[startPosition.Y, startPosition.X + offset, startPosition.Y,
+            var range = sheet.Range[startPosition.Y, startPosition.X + offset, startPosition.Y,
                 startPosition.X + offset];
 
             AddText(range, abbreviation, Style.Default);
-            range.Style.Fill.SetBackground(color);
+            range.Style.Color = color;
             
             offset += 1;
         }
 
         var endPoint = new Vector2i(firstPoint.X + _width - 1, firstPoint.Y);
-        SetBorder(sheet.Cells[firstPoint.Y, firstPoint.X, endPoint.Y, endPoint.X]);
+        SetBorder(sheet.Range[firstPoint.Y, firstPoint.X, endPoint.Y, endPoint.X]);
         
         startPosition += new Vector2i(0, 1);
     }
 
-    private void SetBorder(ExcelRange range)
+    private void SetBorder(CellRange range)
     {
-        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-        range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-        range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+        range.Style.Borders[BordersLineType.EdgeTop].LineStyle = LineStyleType.Thin;
+        range.Style.Borders[BordersLineType.EdgeBottom].LineStyle = LineStyleType.Thin;
+        range.Style.Borders[BordersLineType.EdgeLeft].LineStyle = LineStyleType.Thin;
+        range.Style.Borders[BordersLineType.EdgeRight].LineStyle = LineStyleType.Thin;
     }
         
-    private void FillTable(ExcelWorksheet sheet, ref Vector2i startPosition, Calendar content, Week week)
+    private Vector2i FillTable(Worksheet sheet, ref Vector2i position, Schedule content, Week week)
     {
-        var origY = startPosition.Y;
-        startPosition += new Vector2i((content.Days.Keys.First() - week.Start.Date).Days, 0);
+        var startPosition = position;
+        var origY = position.Y;
         
         foreach (var (day, times) in content.Days)
         {
-            startPosition = startPosition.WithY(origY);
+            position = position.WithY(origY);
             
             foreach (var (_, events) in times)
             {
+                var currentY = position.Y;
+                position += Vector2i.UnitY;
+                
+                if (events.Count == 0)
+                    continue;
+                
                 var @event = events[0];
                 var disciplineName =
                     _abbreviations.TryGetValue(@event.DisciplineId, out var name) ? name : @event.Title;
                 var classroom = @event.Classroom != string.Empty ? $" | {@event.Classroom}" : string.Empty;
                 var title = $"{disciplineName}{classroom}";
-                var range = sheet.Cells[origY + (@event.Order - 1), startPosition.X];
+                var range = sheet[currentY, position.X];
                 var color = _typeLessonByColors.GetValueOrDefault(@event.PpsLoad, Color.Azure);
                 
                 AddText(range, title, Style.DefaultWithoutBold);
-                range.Style.Fill.SetBackground(color);
-                
-                startPosition += Vector2i.UnitY;
+                range.Style.Color = color;
             }
 
-            startPosition += Vector2i.UnitX;
+            position += Vector2i.UnitX;
         }
+
+        var endPosition = position - new Vector2i(1, 1);
+        position = startPosition;
         
-        startPosition -= Vector2i.UnitX;
-        startPosition = startPosition.WithY(origY + Calendar.CountLessons - 1);
+        return endPosition;
     }
 
-    private void AddHat(ExcelWorksheet sheet, ref Vector2i startPosition, Week week)
+    private void AddHat(Worksheet sheet, ref Vector2i startPosition, Schedule schedule)
     {
-        var day = week.Start;
-        var end = week.End.AddDays(1);
         var point = startPosition;
-        
-        while (day != end)
+        foreach (var (day, _) in schedule.Days)
         {
-            var range = sheet.Cells[point.Y, point.X];
+            var range = sheet[point.Y, point.X];
             AddText(range, day.ToStringWithCulture("d"), Style.Default);
-            
-            day = day.AddDays(1);
             point += new Vector2i(1, 0);
         }
         
         startPosition += new Vector2i(0, 1);
     }
 
-    private void AddText(ExcelRange range, string text, Style? style = default)
+    private void AddText(CellRange range, string text, Style? style = default)
     {
-        range.Value = text;
+        range.Style.NumberFormat = "@";
+        range.Text = text;
 
         if (style is not null)
-        {
             ApplyStyle(range, (Style) style);
-        }
     }
     
-    private void AddLefSide(ExcelWorksheet sheet, ref Vector2i startPosition)
+    private void AddLefSide(Worksheet sheet, ref Vector2i startPosition)
     {
-        AddText(sheet.Cells[startPosition.Y, startPosition.X], "Пары:", Style.Default);
-        AddText(sheet.Cells[startPosition.Y, startPosition.X + 1], "Время:", Style.Default);
-        
-        for (var i = 1; i <= Calendar.CountLessons; i++)
+        AddText(sheet[startPosition.Y, startPosition.X], "Пары", Style.Default);
+        AddText(sheet[startPosition.Y, startPosition.X + 1], "Время", Style.Default);
+
+        var i = 1;
+        foreach (var hashedTime in Schedule.HashedLessonTimes)
         {
-            var hashedTime = Calendar.HashedLessonTimes[i - 1];
-            
-            AddText(sheet.Cells[startPosition.Y + i, startPosition.X], $"{i} Пара", Style.Default);
-            AddText(sheet.Cells[startPosition.Y + i, startPosition.X + 1], hashedTime, Style.Default);
+            AddText(sheet[startPosition.Y + i, startPosition.X], $"{i} Пара", Style.Default);
+            AddText(sheet[startPosition.Y + i, startPosition.X + 1], hashedTime, Style.Default);
+            i++;
         }
         
         startPosition += new Vector2i(2, 0);
-    }
-
-    public void Init()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 }

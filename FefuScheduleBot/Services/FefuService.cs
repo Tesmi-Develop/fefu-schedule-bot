@@ -1,19 +1,19 @@
 ﻿using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
+using FefuScheduleBot.Classes;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
 using JetBrains.Annotations;
-using Calendar = FefuScheduleBot.Classes.Calendar;
 
 // ReSharper disable CoVariantArrayConversion
 
 namespace FefuScheduleBot.Services;
 
-public enum SchedulingDay
+public enum WeekType
 {
     Current,
     Next
@@ -26,10 +26,11 @@ public class FefuService : IInitializable
     public readonly int MaxSubgroups = 10;
     
     [Dependency] private readonly EnvironmentData _environmentData = default!;
+    [Dependency] private readonly Config _config = default!;
     private readonly Logger _logger = default!;
     
     private const string Url = "https://univer.dvfu.ru/";
-    private const string SheduleApi = "schedule/get";
+    private const string ScheduleApi = "schedule/get";
     private readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Vladivostok Standard Time");
     private readonly HttpClient _client = new();
     private readonly List<PropertyInfo> _allDateTimeProperties = []; 
@@ -53,7 +54,7 @@ public class FefuService : IInitializable
         var request = new HttpRequestMessage();
         
         var client = new HttpClient();
-        request.RequestUri = new Uri($"{Url}{SheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups%5B%5D=6534&ppsGuid=&facilityId=0");
+        request.RequestUri = new Uri($"{Url}{ScheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups%5B%5D=6534&ppsGuid=&facilityId=0");
         request.Method = HttpMethod.Get;
 
         request.Headers.Add("Accept", "application/json, text/javascript, */*; q=0.01");
@@ -121,7 +122,6 @@ public class FefuService : IInitializable
         var first = date.AddDays(1).Date;
         var end = first.AddDays(5).Date;
         return new Week(first, end);
-
     }
 
     public DateTime GetLocalTime()
@@ -134,19 +134,24 @@ public class FefuService : IInitializable
         return TimeZoneInfo.ConvertTimeFromUtc(isUtc ? time : time.ToUniversalTime(), _localTimeZone);
     }
 
-    public async Task<Calendar> GetSchedule(SchedulingDay day)
+    public async Task<Schedule> GetSchedule(WeekType weekType)
     {
-        var nextDay = GetLocalTime().AddDays(day == SchedulingDay.Current ? 0 : 1);
-        var events = await GetEvents(nextDay);
+        var week = weekType == WeekType.Current
+            ? GetStudyWeek() 
+            : GetStudyWeek(GetLocalTime().AddDays(7));
+        var events = await GetEvents(week.Start, week.End);
 
-        if (events is not null) return new Calendar(events);
-        
-        events = [];
+        if (events is not null) return new Schedule(week, events);
         _logger.Warning("Failed to retrieve the current schedule");
-
-        return new Calendar(events);
+        
+        return new Schedule(week, []);
     }
 
+    public Schedule FilterBySubgroup(Schedule schedule, int subgroup)
+    {
+        return schedule.UseSubgroup(subgroup, _config.CommonDisciplines);
+    }
+    
     public void Init()
     {
         var type = typeof(FefuEvent);

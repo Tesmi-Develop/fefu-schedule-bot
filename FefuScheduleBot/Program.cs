@@ -1,4 +1,6 @@
-﻿using FefuScheduleBot.Environments;
+﻿using System.Text.Json;
+using FefuScheduleBot.Data;
+using FefuScheduleBot.Environments;
 using FefuScheduleBot.ServiceRealisation;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
@@ -20,8 +22,20 @@ public static class Program
     }
 
     public static DependenciesContainer DependenciesContainer = default!;
-    
     private static bool _running;
+    private const string ConfigName = "Config.json";
+
+    private static Config LoadConfig()
+    {
+        using var reader = File.OpenText(ConfigName);
+        var text = reader.ReadToEnd();
+
+        var config = JsonSerializer.Deserialize<Config>(text);
+        if (config is null)
+            throw new Exception("Not found config");
+
+        return config;
+    }
     
     public static Task Main()
     {
@@ -35,9 +49,12 @@ public static class Program
         if (container is null)
             return Task.CompletedTask;
         
+        var config = LoadConfig();
+        
         DependencyManager.InitThread();
         DependenciesContainer = DependencyManager.GetContainer();
         
+        DependencyManager.Register(config);
         DependencyManager.Register(DependencyManager.GetContainer());
         DependencyManager.Register(container);
         

@@ -1,10 +1,8 @@
-﻿using OfficeOpenXml;
-
-namespace FefuScheduleBot.Utils.Extensions;
+﻿namespace FefuScheduleBot.Utils.Extensions;
 
 public static class ColumnExtension
 {
-    public static void SetTrueColumnWidth(this ExcelColumn column, double width)
+   /* public static void SetTrueColumnWidth(this ExcelColumn column, double width)
     {
         // Deduce what the column width would really get set to.
         var z = width >= (1 + 2 / 3)
@@ -27,5 +25,5 @@ public static class ColumnExtension
         }
 
         column.Width = 0d;
-    }
+    }*/
 }

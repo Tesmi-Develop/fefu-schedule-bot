@@ -1,5 +1,6 @@
 ﻿using FefuScheduleBot.Services;
 using FefuScheduleBot.Utils;
+using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -12,26 +13,38 @@ public class SendSchedule : IChainState
 {
     [Dependency] private readonly TelegramBot _bot = default!;
     [Dependency] private readonly ExcelService _excelService = default!;
+    [Dependency] private readonly FefuService _fefuService = default!;
+    [Dependency] private readonly ImageService _imageService = default!;
 
     private async Task StartSending(WeekType weekType, int subgroup, ScheduleFormat format, CallbackQuery callbackQuery)
     {
-        var table = format switch
-        {
-            ScheduleFormat.Xlsx => await _excelService.GenerateSchedule(weekType, subgroup),
-            ScheduleFormat.Jpeg => await _excelService.GenerateScheduleImage(weekType, subgroup),
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
-        };
+        var fileName = $"Расписание {_fefuService.GetLocalTime().ToStringWithCulture("d")}.xlsx";
+        var schedule = await _fefuService.GetSchedule(weekType);
+        schedule = _fefuService.FilterBySubgroup(schedule, subgroup);
 
-        await using Stream stream = table.OpenRead();
-        
+        using var streamTable = _excelService.GenerateStreamTable(schedule);
+        using var resultStream = new MemoryStream();
+        streamTable.Position = 0;
+
+        switch (format)
+        {
+            case ScheduleFormat.Xlsx:
+                await streamTable.CopyToAsync(resultStream);
+                break;
+            case ScheduleFormat.Jpeg:
+                await _imageService.GenerateStreamFromTable(streamTable).CopyToAsync(resultStream);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(format), format, null);
+        }
+
+        resultStream.Position = 0;
         _ = format switch
         {
             ScheduleFormat.Jpeg => await _bot.Client.SendPhoto(callbackQuery.Message!.Chat,
-                InputFile.FromStream(stream, table.Name)),
-            _ => await _bot.Client.SendDocument(callbackQuery.Message!.Chat, InputFile.FromStream(stream, table.Name)),
+                InputFile.FromStream(resultStream, fileName)),
+            _ => await _bot.Client.SendDocument(callbackQuery.Message!.Chat, InputFile.FromStream(resultStream, fileName)),
         };
-        
-        File.Delete(table.FullName);
     }
     
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
