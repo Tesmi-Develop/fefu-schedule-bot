@@ -1,5 +1,4 @@
-﻿using System.Web;
-using FefuScheduleBot.Services;
+﻿using FefuScheduleBot.Services;
 using FefuScheduleBot.TelegramBotComponents.States;
 using FefuScheduleBot.Utils;
 using Hypercube.Dependencies;
@@ -11,9 +10,9 @@ namespace FefuScheduleBot.TelegramBotComponents;
 
 public class ScheduleGenerator : IPostInject
 {
-    [Dependency] private readonly TelegramBot _bot = default!;
-    [Dependency] private readonly DependenciesContainer _container = default!;
-    private readonly Logger _logger = default!;
+    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly DependenciesContainer _container = null!;
+    private readonly Logger _logger = null!;
     
     private readonly Dictionary<string, Type> _allState = new();
     

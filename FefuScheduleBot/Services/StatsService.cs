@@ -9,9 +9,9 @@ namespace FefuScheduleBot.Services;
 [Service]
 public class StatsService : IInitializable
 {
-    [Dependency] private readonly FefuService _fefuService = default!;
-    [Dependency] private readonly MongoService _mongoService = default!;
-    private readonly Logger _logger = default!;
+    [Dependency] private readonly FefuService _fefuService = null!;
+    [Dependency] private readonly MongoService _mongoService = null!;
+    private readonly Logger _logger = null!;
     
     private void MakeLog()
     {

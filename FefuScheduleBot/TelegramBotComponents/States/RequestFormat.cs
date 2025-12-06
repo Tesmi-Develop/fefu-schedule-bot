@@ -1,5 +1,4 @@
 ﻿using FefuScheduleBot.Services;
-using FefuScheduleBot.Utils;
 using Hypercube.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -16,7 +15,7 @@ public enum ScheduleFormat
 [State]
 public class RequestFormat : IChainState
 {
-    [Dependency] private readonly TelegramBot _bot = default!;
+    [Dependency] private readonly TelegramBot _bot = null!;
 
     private InlineKeyboardMarkup GenerateButtons(ScheduleGenerator generator, string data)
     {

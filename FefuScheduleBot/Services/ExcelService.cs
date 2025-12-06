@@ -13,60 +13,9 @@ namespace FefuScheduleBot.Services;
 [Service]
 public class ExcelService
 {
-    private readonly Dictionary<int, string> _abbreviations = new()
-    {
-        { 5297, "МАТ. АНАЛИЗ" },
-        { 28660, "ОСН. ЭКН. ГРАМ" },
-        { 13933, "ФИЗ-РА" },
-        { 6672, "ЛИН. АЛГЕБРА" },
-        { 5358, "ИСТОРИЯ. Р" },
-        { 28661, "РУССКИЙ" },
-        { 30210, "ОСН. Р. ГОС" },
-        { 15351, "ИН. ЯЗЫК" },
-        { 9925, "ОСН. АЛГ. И ПРОГ" },
-        { 19986, "ОСН. ЦИФ. ГРАМ" },
-        { 34077, "CОЦ-ПСИХ. ТЕСТ" },
-        { 5279, "ДИСК. МАТ." },
-        { 8945, "АНАЛИТ. ГЕОМЕТРИЯ" },
-        { 5371, "ОПД" },
-        { 65, "БЖД" },
-        { 116, "ФИЗ-РА" }
-    };
-
-    private readonly Dictionary<string, string> _abbreviationTypeLessons = new()
-    {
-        {"Лабораторные работы", "Лабораторная"},
-        {"Практические занятия", "Практическое"},
-        {"Лекционные занятия", "Лекция"}
-    };
-    
-    private readonly Dictionary<string, Color> _typeLessonByColors = new()
-    {
-        {"Лекционные занятия", Color.FromArgb(244, 176, 132)},
-        {"Лабораторные работы", Color.FromArgb(255, 192, 0)},
-        {"Практические занятия", Color.FromArgb(85, 151, 211)},
-        {"Мероприятие", Color.FromArgb(146, 208, 80)}
-    };
-
     private readonly int _width = Schedule.CountWorkingDays + 2;
-    
-    [Dependency] private readonly FefuService _fefuService = default!;
-
-   /* public async Task<FileInfo> GenerateSchedule(WeekType weekType, Calendar calendar, string customName = "")
-    {
-        var time = _fefuService.GetLocalTime();
-        var week = weekType == WeekType.Current
-            ? _fefuService.GetStudyWeek() 
-            : _fefuService.GetStudyWeek(_fefuService.GetLocalTime().AddDays(7));
-        
-        var events = await _fefuService.GetEvents(week.Start, week.End);
-        var fileInfo = new FileInfo(customName == string.Empty ? $"{fileName}.xlsx" : $"{customName}.xlsx");
-
-        if (File.Exists(fileInfo.FullName))
-            File.Delete(fileInfo.FullName);
-
-        return GenerateTable(fileInfo, calendar, week).File;
-    }*/
+    [Dependency] private readonly Config _config = null!;
+    [Dependency] private readonly FefuService _fefuService = null!;
 
     public void SaveTableToFile(Worksheet worksheet, string name = "")
     {
@@ -97,6 +46,7 @@ public class ExcelService
         SetBorder(sheet.Range[firstPoint.Y, firstPoint.X, endPosition.Y, endPosition.X]);
         
         sheet.Range.AutoFitColumns();
+        sheet.Range.AutoFitRows();
         
         var stream = new MemoryStream();
         workbook.SaveToStream(stream, FileFormat.Version2016);
@@ -126,9 +76,9 @@ public class ExcelService
         var offset = 2;
         var firstPoint = startPosition;
         
-        foreach (var (type, color) in _typeLessonByColors)
+        foreach (var (type, color) in _config.TypeLessonByColors)
         {
-            var abbreviation = _abbreviationTypeLessons.GetValueOrDefault(type, type);
+            var abbreviation = _config.AbbreviationTypeLessons.GetValueOrDefault(type, type);
             var range = sheet.Range[startPosition.Y, startPosition.X + offset, startPosition.Y,
                 startPosition.X + offset];
 
@@ -171,11 +121,11 @@ public class ExcelService
                 
                 var @event = events[0];
                 var disciplineName =
-                    _abbreviations.TryGetValue(@event.DisciplineId, out var name) ? name : @event.Title;
+                    _config.Disciplines.TryGetValue(@event.DisciplineId, out var name) ? name : @event.Title;
                 var classroom = @event.Classroom != string.Empty ? $" | {@event.Classroom}" : string.Empty;
                 var title = $"{disciplineName}{classroom}";
                 var range = sheet[currentY, position.X];
-                var color = _typeLessonByColors.GetValueOrDefault(@event.PpsLoad, Color.Azure);
+                var color = _config.TypeLessonByColors.GetValueOrDefault(@event.PpsLoad, Color.Azure);
                 
                 AddText(range, title, Style.DefaultWithoutBold);
                 range.Style.Color = color;
@@ -203,7 +153,7 @@ public class ExcelService
         startPosition += new Vector2i(0, 1);
     }
 
-    private void AddText(CellRange range, string text, Style? style = default)
+    private void AddText(CellRange range, string text, Style? style = null)
     {
         range.Style.NumberFormat = "@";
         range.Text = text;

@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using FefuScheduleBot.Classes;
 using FefuScheduleBot.ServiceRealisation;
@@ -23,11 +24,10 @@ public enum WeekType
 public class FefuService : IInitializable
 {
     public event Action? CompletedRequest; 
-    public readonly int MaxSubgroups = 10;
     
-    [Dependency] private readonly EnvironmentData _environmentData = default!;
-    [Dependency] private readonly Config _config = default!;
-    private readonly Logger _logger = default!;
+    [Dependency] private readonly EnvironmentData _environmentData = null!;
+    [Dependency] private readonly Config _config = null!;
+    private readonly Logger _logger = null!;
     
     private const string Url = "https://univer.dvfu.ru/";
     private const string ScheduleApi = "schedule/get";
@@ -38,6 +38,25 @@ public class FefuService : IInitializable
     public Task<FefuEvent[]?> GetEvents(DateTime day)
     {
         return GetEvents(day, day);
+    }
+
+    public async Task<string> CollectAllDisciplines()
+    {
+        var builder = new StringBuilder();
+        var disciplines = new Dictionary<int, string>();
+        var currentWeek = GetStudyWeek();
+        var events1 = await GetEvents(currentWeek.Start, currentWeek.End) ?? [];
+        
+        var nextWeek = GetStudyWeek(WeekType.Next);
+        var events2 = await GetEvents(nextWeek.Start, nextWeek.End) ?? [];
+
+        foreach (var fefuEvent in events1.Concat(events2))
+            disciplines.TryAdd(fefuEvent.DisciplineId, fefuEvent.Title);
+
+        foreach (var (id, title) in disciplines)
+            builder.AppendLine($"{id}: {title}");
+        
+        return builder.ToString();
     }
     
     public async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
@@ -52,8 +71,7 @@ public class FefuService : IInitializable
         var endDate = end.Date.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
         
         var request = new HttpRequestMessage();
-        
-        var client = new HttpClient();
+
         request.RequestUri = new Uri($"{Url}{ScheduleApi}?type=agendaWeek&start={startDate}&end={endDate}&groups%5B%5D=6534&ppsGuid=&facilityId=0");
         request.Method = HttpMethod.Get;
 
@@ -108,6 +126,13 @@ public class FefuService : IInitializable
         return GetStudyWeek(GetLocalTime());
     }
     
+    public Week GetStudyWeek(WeekType weekType)
+    {
+        return weekType == WeekType.Current
+            ? GetStudyWeek() 
+            : GetStudyWeek(GetLocalTime().AddDays(7));
+    }
+    
     public Week GetStudyWeek(DateTime date, bool useSunday = false)
     {
         var myCal = CultureInfo.InvariantCulture.Calendar;
@@ -136,9 +161,7 @@ public class FefuService : IInitializable
 
     public async Task<Schedule> GetSchedule(WeekType weekType)
     {
-        var week = weekType == WeekType.Current
-            ? GetStudyWeek() 
-            : GetStudyWeek(GetLocalTime().AddDays(7));
+        var week = GetStudyWeek(weekType);
         var events = await GetEvents(week.Start, week.End);
 
         if (events is not null) return new Schedule(week, events);

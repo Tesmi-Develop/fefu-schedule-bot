@@ -1,6 +1,5 @@
 ﻿using System.Collections.Specialized;
 using FefuScheduleBot.Services;
-using MongoDB.Driver.Linq;
 
 namespace FefuScheduleBot.Utils;
 

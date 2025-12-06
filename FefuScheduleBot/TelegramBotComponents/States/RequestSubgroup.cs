@@ -1,4 +1,5 @@
-﻿using FefuScheduleBot.Services;
+﻿using FefuScheduleBot.Data;
+using FefuScheduleBot.Services;
 using Hypercube.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -8,14 +9,15 @@ namespace FefuScheduleBot.TelegramBotComponents.States;
 
 public class RequestSubgroup : IStartState
 {
-    [Dependency] private readonly FefuService _fefuService = default!;
-    [Dependency] private readonly TelegramBot _bot = default!;
+    [Dependency] private readonly FefuService _fefuService = null!;
+    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly Config _config = null!;
     
     public async Task Process(ScheduleGenerator generator, ChatId id)
     {
         var inlineMarkup = new InlineKeyboardMarkup();
-        var buttonsInRow = _fefuService.MaxSubgroups / 2;
-        var rows = _fefuService.MaxSubgroups / buttonsInRow;
+        var buttonsInRow = _config.CountSubgroups / 2;
+        var rows = _config.CountSubgroups / buttonsInRow;
 
         var buttonId = 1;
         for (var i = 1; i <= rows; i++)
@@ -23,7 +25,7 @@ public class RequestSubgroup : IStartState
             var buttons = new List<InlineKeyboardButton>();
             for (var j = 1; j <= buttonsInRow; j++)
             {
-                if (buttonId > _fefuService.MaxSubgroups) break;
+                if (buttonId > _config.CountSubgroups) break;
                 
                 buttons.Add(InlineKeyboardButton.WithCallbackData(
                     buttonId.ToString(), 

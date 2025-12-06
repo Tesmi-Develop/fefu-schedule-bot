@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using FefuScheduleBot.Data;
-using FefuScheduleBot.Services;
 using FefuScheduleBot.Utils.Extensions;
 using JetBrains.Annotations;
 // ReSharper disable SuspiciousTypeConversion.Global

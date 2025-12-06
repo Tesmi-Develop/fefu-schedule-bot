@@ -13,15 +13,15 @@ namespace FefuScheduleBot.Services;
 [Service]
 public class TelegramBot : IStartable
 {
-    public TelegramBotClient Client { get; private set; } = default!;
+    public TelegramBotClient Client { get; private set; } = null!;
     
-    [Dependency] private readonly EnvironmentData _environmentData = default!;
-    [Dependency] private readonly DependenciesContainer _container = default!;
-    [Dependency] private readonly StatsService _statsService = default!;
-    private readonly Logger _logger = default!;
+    [Dependency] private readonly EnvironmentData _environmentData = null!;
+    [Dependency] private readonly DependenciesContainer _container = null!;
+    [Dependency] private readonly StatsService _statsService = null!;
+    private readonly Logger _logger = null!;
     
-    private CancellationTokenSource _cancellationToken = default!;
-    private ScheduleGenerator _generator = default!;
+    private CancellationTokenSource _cancellationToken = null!;
+    private ScheduleGenerator _generator = null!;
     private string[] _excludeList = [];
     private void ConnectToEvents()
     {

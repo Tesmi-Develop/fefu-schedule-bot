@@ -1,5 +1,4 @@
 ﻿using FefuScheduleBot.ServiceRealisation;
-using SkiaSharp;
 using Spire.Xls;
 
 namespace FefuScheduleBot.Services;
@@ -17,23 +16,24 @@ public class ImageService
 
     public Stream ApplyBackground(Stream imageStream)
     {
-        var originalBitmap = SKBitmap.Decode(imageStream);
+        // TODO
+        /*var originalBitmap = SKBitmap.Decode(imageStream);
         var outputStream = new MemoryStream();
+        using var backgroundFileStream = File.OpenRead("background.png");
+        using var backgroundBitmap = SKBitmap.Decode(backgroundFileStream);
         using var canvas = new SKCanvas(originalBitmap);
-        using var textPaint = new SKPaint();
         
-        textPaint.Color = SKColors.Black;
-        textPaint.TextSize = 36.0f;
-        textPaint.Typeface = SKTypeface.FromFamilyName("Arial", SKTypefaceStyle.Bold); 
-            
-        textPaint.IsAntialias = true;
-        canvas.DrawText("Hello", new SKPoint(100, 50), textPaint);
+        var x = (originalBitmap.Width - backgroundBitmap.Width) / 2;
+        var y = (originalBitmap.Height - backgroundBitmap.Width) / 2;
+        
+        var destRect = new SKRect(0, 0, originalBitmap.Width, originalBitmap.Height);
+        canvas.DrawBitmap(backgroundBitmap, destRect);
 
         var image = SKImage.FromBitmap(originalBitmap);
         var encodedData = image.Encode(SKEncodedImageFormat.Png, 100);
         encodedData.SaveTo(outputStream);
 
-        outputStream.Position = 0;
-        return outputStream;
+        outputStream.Position = 0;*/
+        return imageStream;
     }
 }

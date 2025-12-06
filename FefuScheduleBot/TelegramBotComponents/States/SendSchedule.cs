@@ -4,17 +4,16 @@ using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using File = System.IO.File;
 
 namespace FefuScheduleBot.TelegramBotComponents.States;
 
 [State]
 public class SendSchedule : IChainState
 {
-    [Dependency] private readonly TelegramBot _bot = default!;
-    [Dependency] private readonly ExcelService _excelService = default!;
-    [Dependency] private readonly FefuService _fefuService = default!;
-    [Dependency] private readonly ImageService _imageService = default!;
+    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly ExcelService _excelService = null!;
+    [Dependency] private readonly FefuService _fefuService = null!;
+    [Dependency] private readonly ImageService _imageService = null!;
 
     private async Task StartSending(WeekType weekType, int subgroup, ScheduleFormat format, CallbackQuery callbackQuery)
     {

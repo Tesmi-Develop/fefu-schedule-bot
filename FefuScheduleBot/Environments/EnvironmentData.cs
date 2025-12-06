@@ -12,13 +12,13 @@ public sealed class EnvironmentData
     
     [EnvironmentSpacing]
     
-    public readonly string UniverId = default!;
-    public readonly string Jwts = default!;
-    public readonly string LtpaToken = default!;
+    public readonly string UniverId = null!;
+    public readonly string Jwts = null!;
+    public readonly string LtpaToken = null!;
 
     [EnvironmentSpacing]
     
-    public readonly string TelegramToken = default!;
+    public readonly string TelegramToken = null!;
     
     [EnvironmentSpacing]
     

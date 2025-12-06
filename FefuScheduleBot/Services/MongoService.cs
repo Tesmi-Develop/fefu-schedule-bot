@@ -16,12 +16,12 @@ public sealed class MongoService : IInitializable
 {
     public event Action<object>? SchemaAdded;
     
-    private MongoClient _client = default!;
-    private IMongoDatabase _database = default!;
-    private FrozenDictionary<Type, object> _collections = default!;
+    private MongoClient _client = null!;
+    private IMongoDatabase _database = null!;
+    private FrozenDictionary<Type, object> _collections = null!;
     
-    [Dependency] private readonly EnvironmentData _environmentData = default!;
-    private readonly Logger _logger = default!;
+    [Dependency] private readonly EnvironmentData _environmentData = null!;
+    private readonly Logger _logger = null!;
     private readonly Dictionary<string, object> _dataWrappers = new();
     
     public void Init()
