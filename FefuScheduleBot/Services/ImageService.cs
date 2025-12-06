@@ -24,7 +24,7 @@ public class ImageService
         
         textPaint.Color = SKColors.Black;
         textPaint.TextSize = 36.0f;
-        textPaint.Typeface = SKTypeface.FromFamilyName("Arial", SKTypefaceStyle.Bold); 
+        textPaint.Typeface = SKTypeface.FromFamilyName("DejaVu Sans", SKTypefaceStyle.Bold); 
             
         textPaint.IsAntialias = true;
         canvas.DrawText("Hello", new SKPoint(100, 50), textPaint);
