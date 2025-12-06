@@ -9,7 +9,6 @@ namespace FefuScheduleBot.TelegramBotComponents.States;
 
 public class RequestSubgroup : IStartState
 {
-    [Dependency] private readonly FefuService _fefuService = null!;
     [Dependency] private readonly TelegramBot _bot = null!;
     [Dependency] private readonly Config _config = null!;
     
