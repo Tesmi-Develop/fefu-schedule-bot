@@ -130,7 +130,7 @@ public class FefuService : IInitializable
     {
         return weekType == WeekType.Current
             ? GetStudyWeek() 
-            : GetStudyWeek(GetLocalTime().AddDays(7));
+            : GetStudyWeek(GetLocalTime().AddDays(14));
     }
     
     public Week GetStudyWeek(DateTime date, bool useSunday = false)
