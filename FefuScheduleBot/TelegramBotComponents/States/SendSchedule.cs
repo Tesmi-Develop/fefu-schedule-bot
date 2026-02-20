@@ -51,7 +51,7 @@ public class SendSchedule : IChainState
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
     {
         var parsedData = Utility.ParseQueryParams(data);
-        var format = (ScheduleFormat)Enum.Parse(typeof(ScheduleFormat), parsedData["Format"]!);
+        // var format = (ScheduleFormat)Enum.Parse(typeof(ScheduleFormat), parsedData["Format"]!);
         var weekType = (WeekType)Enum.Parse(typeof(WeekType), parsedData["WeekType"]!);
         var subgroup = int.Parse(parsedData["Subgroup"]!);
         
@@ -60,6 +60,6 @@ public class SendSchedule : IChainState
             callbackQuery.Message.MessageId,
             "Расписание будет отправлено в ближайшее время"
             );
-        await StartSending(weekType, subgroup, format, callbackQuery);
+        await StartSending(weekType, subgroup, ScheduleFormat.Jpeg, callbackQuery);
     }
 }

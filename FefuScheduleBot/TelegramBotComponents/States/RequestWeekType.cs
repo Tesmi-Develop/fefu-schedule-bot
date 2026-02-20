@@ -14,7 +14,7 @@ public class RequestWeekType : IChainState
     private InlineKeyboardMarkup GenerateButtons(ScheduleGenerator generator, string data)
     {
         var markup = new InlineKeyboardMarkup();
-        var nextStateData = generator.GenerateTransferStateData<RequestFormat>(data);
+        var nextStateData = generator.GenerateTransferStateData<SendSchedule>(data);
         
         markup.AddButton("Текущая неделя",$"{nextStateData}&WeekType={WeekType.Current}");
         markup.AddButton("Cледующая неделя",$"{nextStateData}&WeekType={WeekType.Next}");
