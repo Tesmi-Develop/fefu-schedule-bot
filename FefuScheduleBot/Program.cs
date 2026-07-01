@@ -42,7 +42,7 @@ public static class Program
     
     public static Task Main()
     {
-        var solutionPath = Path.GetFullPath(@"..\..\..\");
+        var solutionPath = Path.GetFullPath(Path.Combine("..", "..", ".."));
         var filePath = Path.Combine(solutionPath, ".env");
 
         if (!File.Exists(filePath))
