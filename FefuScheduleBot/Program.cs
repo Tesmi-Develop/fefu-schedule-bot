@@ -42,8 +42,11 @@ public static class Program
     
     public static Task Main()
     {
-        var solutionPath = Path.GetFullPath(Path.Combine("..", "..", ".."));
+        var solutionPath = Path.GetFullPath(@"..\..\..\");
         var filePath = Path.Combine(solutionPath, ".env");
+
+        if (!File.Exists(filePath))
+            filePath = ".env";
 
         var container = TryLoadEnv(filePath);
         if (container is null)
@@ -73,11 +76,13 @@ public static class Program
     
     private static EnvironmentData? TryLoadEnv(string path = ".env")
     {
+        var logger = LoggingManager.GetLogger("environment");
         var container = new EnvironmentContainer();
         
         if (container.TryLoad(path))
             return container.Data;
         
+        logger.Error($"Failed to load environment file. Created template file: {path}");
         return null;
     }
     

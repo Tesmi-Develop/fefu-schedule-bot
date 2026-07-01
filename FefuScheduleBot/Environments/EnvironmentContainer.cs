@@ -1,7 +1,6 @@
 ﻿using dotenv.net;
 using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;
-using Hypercube.Shared.Logging;
 using Hypercube.Shared.Utilities.Extensions;
 using JetBrains.Annotations;
 
@@ -78,14 +77,7 @@ public sealed class EnvironmentContainer
 
     private static void ModifyEnvFile(string path, string content)
     {
-        var logger = LoggingManager.GetLogger("environment");
-        
         using var file = File.CreateText(path);
         file.Write(content);
-        
-        if (!File.Exists(path))
-            logger.Error($"Failed to load environment file. Created template file: {path}");
-        else
-            logger.Error($"Failed to parse environment file. Modifies file: {path}");
     }
 }
