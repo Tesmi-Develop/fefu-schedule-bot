@@ -1,0 +1,27 @@
+﻿version: '3.8'
+
+services:
+  fefu-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fefu-bot
+    restart: always
+    depends_on:
+      - mongodb
+    env_file:
+      - ./FefuScheduleBot/.env
+    volumes:
+      - ./FefuScheduleBot/.env:/app/.env
+
+  mongodb:
+    image: mongo:latest
+    container_name: fefu-bot-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
