@@ -75,7 +75,7 @@ public class Schedule : IEnumerable<SchedulePairList>
             AddEvent(@event);
     }
 
-    public Schedule UseSubgroup(int subgroup, IReadOnlyList<int> excludeDiscipline)
+    public Schedule UseSubgroup(string subgroup, IReadOnlyList<int> excludeDiscipline)
     {
         var newEvents = new List<FefuEvent>();
 
@@ -83,7 +83,7 @@ public class Schedule : IEnumerable<SchedulePairList>
         {
             foreach (var @event in events)
             {
-                if (@event.Subgroup != string.Empty && @event.Subgroup != subgroup.ToString() &&  !excludeDiscipline.Contains(@event.DisciplineId))
+                if (@event.Subgroup != string.Empty && @event.Subgroup != subgroup &&  !excludeDiscipline.Contains(@event.DisciplineId))
                     continue;
                     
                 newEvents.Add(@event);

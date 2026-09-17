@@ -10,7 +10,7 @@ namespace FefuScheduleBot.TelegramBotComponents;
 
 public class ScheduleGenerator : IPostInject
 {
-    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly TelegramBotService _botService = null!;
     [Dependency] private readonly DependenciesContainer _container = null!;
     private readonly Logger _logger = null!;
     
@@ -18,7 +18,7 @@ public class ScheduleGenerator : IPostInject
     
     public void PostInject()
     {
-        _bot.Client.OnUpdate += update =>
+        _botService.Client.OnUpdate += update =>
         {
             if (update.Type != UpdateType.CallbackQuery || update.CallbackQuery is null) return Task.CompletedTask;
             

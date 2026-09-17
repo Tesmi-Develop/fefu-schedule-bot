@@ -18,6 +18,9 @@ public class Config
     [JsonPropertyName("abbreviationTypeLessons")]
     public required Dictionary<string, string> AbbreviationTypeLessons { get; set; }
     
-    [JsonPropertyName("countSubgroups")]
-    public required int CountSubgroups { get; set; }
+    [JsonPropertyName("subgroups")]
+    public required string[] Subgroups { get; set; }
+    
+    [JsonPropertyName("maxButtonsInRow")]
+    public required int MaxButtonsInRow { get; set; }
 } 

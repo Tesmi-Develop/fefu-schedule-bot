@@ -9,7 +9,7 @@ namespace FefuScheduleBot.TelegramBotComponents.States;
 [State]
 public class RequestWeekType : IChainState
 {
-    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly TelegramBotService _botService = null!;
 
     private InlineKeyboardMarkup GenerateButtons(ScheduleGenerator generator, string data)
     {
@@ -23,7 +23,7 @@ public class RequestWeekType : IChainState
     }
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
     {
-        await _bot.Client.EditMessageText(
+        await _botService.Client.EditMessageText(
             callbackQuery.Message!.Chat,
             callbackQuery.Message.MessageId,
             "На какую неделю вы хотите расписание?",

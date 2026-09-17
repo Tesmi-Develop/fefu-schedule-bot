@@ -15,7 +15,7 @@ public enum ScheduleFormat
 [State]
 public class RequestFormat : IChainState
 {
-    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly TelegramBotService _botService = null!;
 
     private InlineKeyboardMarkup GenerateButtons(ScheduleGenerator generator, string data)
     {
@@ -29,7 +29,7 @@ public class RequestFormat : IChainState
     }
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
     {
-        await _bot.Client.EditMessageText(
+        await _botService.Client.EditMessageText(
             callbackQuery.Message!.Chat,
             callbackQuery.Message.MessageId,
             "В каком формате вы хотите расписание?",

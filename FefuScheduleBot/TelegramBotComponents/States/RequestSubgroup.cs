@@ -9,33 +9,33 @@ namespace FefuScheduleBot.TelegramBotComponents.States;
 
 public class RequestSubgroup : IStartState
 {
-    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly TelegramBotService _botService = null!;
     [Dependency] private readonly Config _config = null!;
     
     public async Task Process(ScheduleGenerator generator, ChatId id)
     {
         var inlineMarkup = new InlineKeyboardMarkup();
-        var buttonsInRow = _config.CountSubgroups / 2;
-        var rows = _config.CountSubgroups / buttonsInRow;
 
-        var buttonId = 1;
-        for (var i = 1; i <= rows; i++)
+        var buttonsInRow = Math.Max(1, _config.MaxButtonsInRow);
+        var subgroups = _config.Subgroups;
+
+        for (var i = 0; i < subgroups.Length; i += buttonsInRow)
         {
-            var buttons = new List<InlineKeyboardButton>();
-            for (var j = 1; j <= buttonsInRow; j++)
-            {
-                if (buttonId > _config.CountSubgroups) break;
-                
-                buttons.Add(InlineKeyboardButton.WithCallbackData(
-                    buttonId.ToString(), 
-                    generator.GenerateTransferStateData<RequestWeekType>($"Subgroup={buttonId.ToString()}"))
-                );
-                buttonId++;
-            }
+            var rowButtons = subgroups
+                .Skip(i)
+                .Take(buttonsInRow)
+                .Select((subgroup, index) =>
+                {
+                    var buttonName = _config.Subgroups[i + index];
+                    var callbackData = generator.GenerateTransferStateData<RequestWeekType>($"Subgroup={buttonName}");
 
-            inlineMarkup.AddNewRow(buttons.ToArray());
+                    return InlineKeyboardButton.WithCallbackData(buttonName, callbackData);
+                })
+                .ToArray();
+
+            inlineMarkup.AddNewRow(rowButtons);
         }
         
-        await _bot.Client.SendMessage(id, "Выберите подгруппу", replyMarkup: inlineMarkup);
+        await _botService.Client.SendMessage(id, "Выберите подгруппу", replyMarkup: inlineMarkup);
     }
 }

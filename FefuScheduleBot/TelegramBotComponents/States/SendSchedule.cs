@@ -10,12 +10,12 @@ namespace FefuScheduleBot.TelegramBotComponents.States;
 [State]
 public class SendSchedule : IChainState
 {
-    [Dependency] private readonly TelegramBot _bot = null!;
+    [Dependency] private readonly TelegramBotService _botService = null!;
     [Dependency] private readonly ExcelService _excelService = null!;
     [Dependency] private readonly FefuService _fefuService = null!;
     [Dependency] private readonly ImageService _imageService = null!;
 
-    private async Task StartSending(WeekType weekType, int subgroup, ScheduleFormat format, CallbackQuery callbackQuery)
+    private async Task StartSending(WeekType weekType, string subgroup, ScheduleFormat format, CallbackQuery callbackQuery)
     {
         var fileName = $"Расписание {_fefuService.GetLocalTime().ToStringWithCulture("d")}.xlsx";
         var schedule = await _fefuService.GetSchedule(weekType);
@@ -42,20 +42,19 @@ public class SendSchedule : IChainState
         resultStream.Position = 0;
         _ = format switch
         {
-            ScheduleFormat.Jpeg => await _bot.Client.SendPhoto(callbackQuery.Message!.Chat,
+            ScheduleFormat.Jpeg => await _botService.Client.SendPhoto(callbackQuery.Message!.Chat,
                 InputFile.FromStream(resultStream, fileName)),
-            _ => await _bot.Client.SendDocument(callbackQuery.Message!.Chat, InputFile.FromStream(resultStream, fileName)),
+            _ => await _botService.Client.SendDocument(callbackQuery.Message!.Chat, InputFile.FromStream(resultStream, fileName)),
         };
     }
     
     public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
     {
         var parsedData = Utility.ParseQueryParams(data);
-        // var format = (ScheduleFormat)Enum.Parse(typeof(ScheduleFormat), parsedData["Format"]!);
         var weekType = (WeekType)Enum.Parse(typeof(WeekType), parsedData["WeekType"]!);
-        var subgroup = int.Parse(parsedData["Subgroup"]!);
+        var subgroup = parsedData["Subgroup"];
         
-        await _bot.Client.EditMessageText(
+        await _botService.Client.EditMessageText(
             callbackQuery.Message!.Chat,
             callbackQuery.Message.MessageId,
             "Расписание будет отправлено в ближайшее время"

@@ -40,7 +40,7 @@ public class FefuService : IInitializable
         return GetEvents(day, day);
     }
 
-    public async Task<string> CollectAllDisciplines()
+    public async Task<Dictionary<int, string>> CollectAllDisciplines()
     {
         var builder = new StringBuilder();
         var disciplines = new Dictionary<int, string>();
@@ -53,6 +53,18 @@ public class FefuService : IInitializable
         foreach (var fefuEvent in events1.Concat(events2))
             disciplines.TryAdd(fefuEvent.DisciplineId, fefuEvent.Title);
 
+        return disciplines;
+    }
+
+    public async Task<Dictionary<int, string>> GetDisciplinesMissingFromConfig()
+    {
+        return (await CollectAllDisciplines()).Where((kvp) => !_config.Disciplines.ContainsKey(kvp.Key)).ToDictionary();
+    }
+
+    public string FormatDisciplines(Dictionary<int, string> disciplines)
+    {
+        var builder = new StringBuilder();
+        
         foreach (var (id, title) in disciplines)
             builder.AppendLine($"{id}: {title}");
         
@@ -170,7 +182,7 @@ public class FefuService : IInitializable
         return new Schedule(week, []);
     }
 
-    public Schedule FilterBySubgroup(Schedule schedule, int subgroup)
+    public Schedule FilterBySubgroup(Schedule schedule, string subgroup)
     {
         return schedule.UseSubgroup(subgroup, _config.CommonDisciplines);
     }
