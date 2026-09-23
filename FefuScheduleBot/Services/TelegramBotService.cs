@@ -2,6 +2,8 @@
 using FefuScheduleBot.Environments;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.TelegramBotComponents;
+using FefuScheduleBot.TelegramBotComponents.States;
+using FefuScheduleBot.Utils;
 using Hypercube.Dependencies;
 using Hypercube.Shared.Logging;
 using Telegram.Bot;
@@ -12,7 +14,7 @@ using UpdateType = Telegram.Bot.Types.Enums.UpdateType;
 namespace FefuScheduleBot.Services;
 
 [Service]
-public class TelegramBotService : IStartable
+public class TelegramBotService : IInitializable, IStartable
 {
     public TelegramBotClient Client { get; private set; } = null!;
     
@@ -20,18 +22,84 @@ public class TelegramBotService : IStartable
     [Dependency] private readonly DependenciesContainer _container = null!;
     [Dependency] private readonly StatsService _statsService = null!;
     private readonly Logger _logger = null!;
-    private Dictionary<string, (ICommand, CommandAttribute)> _commands = new();
     
+    private Dictionary<string, (ICommand, CommandAttribute)> _commands = new();
     private CancellationTokenSource _cancellationToken = null!;
-    private ScheduleGenerator _generator = null!;
     private string[] _excludeList = [];
+    private readonly Dictionary<string, Type> _allState = new();
+    
     private void ConnectToEvents()
     {
         Client.OnMessage += OnMessage;
         Client.OnError += OnError;
+        Client.OnUpdate += OnUpdate;
+    }
+
+    private Task OnUpdate(Update update)
+    {
+        if (update.Type != UpdateType.CallbackQuery || update.CallbackQuery is null) return Task.CompletedTask;
+            
+        ProcessCallbackQuery(update.CallbackQuery);
+        return Task.CompletedTask;
+    }
+
+    private void RegisterStates()
+    {
+        foreach (var (type, _) in ReflectionHelper.GetAllTypes<StateAttribute>())
+        {
+            var targetType = typeof(IChainState);
+            
+            if (!type.IsAssignableTo(targetType))
+            {
+                _logger.Warning($"Found a {type.Name} that does not inherit a class {targetType.Name}");
+                continue;
+            }
+            
+            _allState[type.Name] = type;
+        }
     }
     
-    public static Dictionary<string, (ICommand Command, CommandAttribute Attribute)> GetCommands(
+    private void ProcessCallbackQuery(CallbackQuery callbackQuery)
+    {
+        if (callbackQuery.Data is null || callbackQuery.Message is null) return;
+
+        var data = Utility.ParseQueryParams(callbackQuery.Data);
+        var nextState = data["State"];
+        data.Remove("State");
+        
+        if (nextState is null) return;
+        var state = _allState[nextState];
+        
+        TransferToNextState(state, callbackQuery, Utility.ConvertQueryParams(data));
+    }
+
+    private void TransferToNextState(Type stateType, CallbackQuery callbackQuery, string data)
+    {
+        var state = (IChainState)stateType.GetConstructors()[0].Invoke([]);
+        _container.Inject(state);
+
+        _ = Callback();
+        return;
+
+        async Task Callback()
+        {
+            try
+            {
+                await state.Process(this, callbackQuery, data);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+    }
+
+    public string GenerateTransferStateData<T>(string additionalData = "")
+    {
+        return $"State={typeof(T).Name}&{additionalData}";
+    }
+
+    private static Dictionary<string, (ICommand Command, CommandAttribute Attribute)> GetCommands(
         DependenciesContainer container, 
         Assembly? assembly = null)
     {
@@ -60,10 +128,10 @@ public class TelegramBotService : IStartable
         return result;
     }
 
-    private async Task OnError(Exception exception, HandleErrorSource source)
+    private Task OnError(Exception exception, HandleErrorSource source)
     {
-        Console.WriteLine(exception);
-        await Task.Delay(2000, _cancellationToken.Token);
+        _logger.Error(exception.Message);
+        return Task.CompletedTask;
     }
     
     private async Task OnMessage(Message message, UpdateType updateType)
@@ -96,6 +164,35 @@ public class TelegramBotService : IStartable
         await Client.SetMyCommands(botCommands, cancellationToken: cancellationToken);
     }
     
+    public void Init()
+    {
+        RegisterStates();
+    }
+    
+    public async Task StartNewScheduleRequest(ChatId id, string[] subgroups)
+    {
+        var request = new RequestWeekType();
+        _container.Inject(request);
+        
+        await request.Process(this, id, subgroups);
+    }
+    
+    public async Task StartNewScheduleRequest(ChatId id)
+    {
+        var request = new RequestSubgroup();
+        _container.Inject(request);
+        
+        await request.Process(this, id);
+    }
+    
+    public async Task StartSettingsRequest(ChatId id, long userId)
+    {
+        var request = new SettingsState();
+        _container.Inject(request);
+        
+        await request.Start(this, id, userId);
+    }
+    
     public async Task Start()
     {
         _commands = GetCommands(_container);
@@ -108,9 +205,6 @@ public class TelegramBotService : IStartable
         
         _cancellationToken = new CancellationTokenSource();
         Client = new TelegramBotClient(_environmentData.TelegramToken, cancellationToken: _cancellationToken.Token);
-
-        _generator = new ScheduleGenerator();
-        _container.Inject(_generator);
         
         ConnectToEvents();
 

@@ -8,6 +8,16 @@ namespace FefuScheduleBot.TelegramBotComponents.Commands;
 [Command("missingdisciplines", "Получить новые дисциплины")]
 public class MissingDisciplinesCommand : ICommand
 {
+    public void Init(DependenciesContainer container)
+    {
+        // Do nothing
+    }
+
+    public void Start(DependenciesContainer container)
+    {
+        // Do nothing
+    }
+
     public async Task Execute(Message message, DependenciesContainer container)
     {
         var fefuService = container.Resolve<FefuService>();

@@ -17,7 +17,7 @@ public class RequestFormat : IChainState
 {
     [Dependency] private readonly TelegramBotService _botService = null!;
 
-    private InlineKeyboardMarkup GenerateButtons(ScheduleGenerator generator, string data)
+    private InlineKeyboardMarkup GenerateButtons(TelegramBotService generator, string data)
     {
         var markup = new InlineKeyboardMarkup();
         var nextStateData = generator.GenerateTransferStateData<SendSchedule>(data);
@@ -27,7 +27,7 @@ public class RequestFormat : IChainState
         
         return markup;
     }
-    public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
+    public async Task Process(TelegramBotService generator, CallbackQuery callbackQuery, string data)
     {
         await _botService.Client.EditMessageText(
             callbackQuery.Message!.Chat,

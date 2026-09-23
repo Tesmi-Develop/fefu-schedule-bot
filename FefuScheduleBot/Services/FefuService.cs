@@ -182,9 +182,9 @@ public class FefuService : IInitializable
         return new Schedule(week, []);
     }
 
-    public Schedule FilterBySubgroup(Schedule schedule, string subgroup)
+    public Schedule FilterBySubgroups(Schedule schedule, string[] subgroups)
     {
-        return schedule.UseSubgroup(subgroup, _config.CommonDisciplines);
+        return schedule.UseSubgroups(subgroups, _config.CommonDisciplines);
     }
     
     public void Init()

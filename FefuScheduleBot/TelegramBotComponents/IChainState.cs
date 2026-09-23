@@ -1,8 +1,9 @@
-﻿using Telegram.Bot.Types;
+﻿using FefuScheduleBot.Services;
+using Telegram.Bot.Types;
 
 namespace FefuScheduleBot.TelegramBotComponents;
 
 public interface IChainState
 {
-    Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data);
+    Task Process(TelegramBotService generator, CallbackQuery callbackQuery, string data);
 }

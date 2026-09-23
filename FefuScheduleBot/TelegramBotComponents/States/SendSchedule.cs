@@ -1,4 +1,5 @@
-﻿using FefuScheduleBot.Services;
+﻿using FefuScheduleBot.Data;
+using FefuScheduleBot.Services;
 using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
@@ -14,12 +15,13 @@ public class SendSchedule : IChainState
     [Dependency] private readonly ExcelService _excelService = null!;
     [Dependency] private readonly FefuService _fefuService = null!;
     [Dependency] private readonly ImageService _imageService = null!;
+    [Dependency] private readonly Config _config = null!;
 
-    private async Task StartSending(WeekType weekType, string subgroup, ScheduleFormat format, CallbackQuery callbackQuery)
+    private async Task StartSending(WeekType weekType, string[] subgroups, ScheduleFormat format, CallbackQuery callbackQuery)
     {
         var fileName = $"Расписание {_fefuService.GetLocalTime().ToStringWithCulture("d")}.xlsx";
         var schedule = await _fefuService.GetSchedule(weekType);
-        schedule = _fefuService.FilterBySubgroup(schedule, subgroup);
+        schedule = _fefuService.FilterBySubgroups(schedule, subgroups);
 
         using var streamTable = _excelService.GenerateStreamTable(schedule);
         using var resultStream = new MemoryStream();
@@ -48,17 +50,17 @@ public class SendSchedule : IChainState
         };
     }
     
-    public async Task Process(ScheduleGenerator generator, CallbackQuery callbackQuery, string data)
+    public async Task Process(TelegramBotService generator, CallbackQuery callbackQuery, string data)
     {
         var parsedData = Utility.ParseQueryParams(data);
         var weekType = (WeekType)Enum.Parse(typeof(WeekType), parsedData["WeekType"]!);
-        var subgroup = parsedData["Subgroup"];
+        var subgroups = Utility.DecodeSubgroups(parsedData["Subgroups"] ?? string.Empty, _config.Subgroups);
         
         await _botService.Client.EditMessageText(
             callbackQuery.Message!.Chat,
             callbackQuery.Message.MessageId,
             "Расписание будет отправлено в ближайшее время"
             );
-        await StartSending(weekType, subgroup, ScheduleFormat.Jpeg, callbackQuery);
+        await StartSending(weekType, subgroups, ScheduleFormat.Jpeg, callbackQuery);
     }
 }
