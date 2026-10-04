@@ -23,7 +23,7 @@ public enum WeekType
 [Service, PublicAPI]
 public class FefuService : IInitializable
 {
-    public DateTime LocalTime => ToLocalTime(ToLocalTime(DateTime.Now));
+    public DateTime LocalTime => ToLocalTime(DateTime.Now);
     public event Action? CompletedRequest; 
     
     [Dependency] private readonly EnvironmentData _environmentData = null!;
