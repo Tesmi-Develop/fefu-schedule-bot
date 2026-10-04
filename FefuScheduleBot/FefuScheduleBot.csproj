@@ -28,8 +28,32 @@
       <Content Include="Config.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-      <None Remove="background.png" />
-      <Content Include="background.png">
+      <None Remove="Assets\Autumn\overlay.png" />
+      <Content Include="Assets\Autumn\overlay.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\Autumn\background.png" />
+      <Content Include="Assets\Autumn\background.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\Winter\background.png" />
+      <Content Include="Assets\Winter\background.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\Spring\background.png" />
+      <Content Include="Assets\Spring\background.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\Spring\overlay.png" />
+      <Content Include="Assets\Spring\overlay.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\Summer\background.png" />
+      <Content Include="Assets\Summer\background.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Assets\Summer\overlay.png" />
+      <Content Include="Assets\Summer\overlay.png">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>

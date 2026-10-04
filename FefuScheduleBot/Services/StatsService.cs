@@ -28,7 +28,7 @@ public class StatsService : IInitializable
 
     public StatsInfo CollectInfo()
     {
-        var currentTime = _fefuService.GetLocalTime();
+        var currentTime = _fefuService.LocalTime;
         long totalUsage = 0;
         long weekUsage = 0;
         long todayUsage = 0;

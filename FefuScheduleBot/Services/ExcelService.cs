@@ -20,7 +20,7 @@ public class ExcelService
     public void SaveTableToFile(Worksheet worksheet, string name = "")
     {
         var fileName = name == string.Empty
-            ? $"Расписание {_fefuService.GetLocalTime().ToStringWithCulture("d")}.xlsx"
+            ? $"Расписание {_fefuService.LocalTime.ToStringWithCulture("d")}.xlsx"
             : $"{name}.xlsx";
         
         if (File.Exists(fileName))
@@ -36,7 +36,7 @@ public class ExcelService
         var sheet = workbook.Worksheets[0];
         
         AddLabels(sheet, ref startPosition);
-        AddDescription(sheet, ref startPosition);
+        AddAuthor(sheet, ref startPosition);
 
         var firstPoint = startPosition;
         AddLefSide(sheet, ref startPosition);
@@ -60,13 +60,14 @@ public class ExcelService
         range.Style.Font.Color = style.TextColor;
     }
     
-    private void AddDescription(Worksheet sheet, ref Vector2i startPosition)
+    private void AddAuthor(Worksheet sheet, ref Vector2i startPosition)
     {
         var range = sheet.Range[startPosition.Y, startPosition.X, startPosition.Y, Schedule.CountWorkingDays + 2];
         
         range.Merge();
         range.Value = "Сгенерировано автоматически (автор Tesmi)";
         ApplyStyle(range, Style.Hat);
+        SetBorder(range);
         
         startPosition += new Vector2i(0, 1);
     }

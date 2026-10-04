@@ -84,10 +84,4 @@ public static class Utility
 
         return selected.ToArray();
     }
-
-    public static DateTime GetNextUpdateDateTime()
-    {
-        var fefuService = Program.DependenciesContainer.Resolve<FefuService>();
-        return fefuService.GetLocalTime().AddDays(1).Date.AddHours(20);
-    }
 }

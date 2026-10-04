@@ -23,6 +23,7 @@ public enum WeekType
 [Service, PublicAPI]
 public class FefuService : IInitializable
 {
+    public DateTime LocalTime => ToLocalTime(ToLocalTime(DateTime.Now));
     public event Action? CompletedRequest; 
     
     [Dependency] private readonly EnvironmentData _environmentData = null!;
@@ -135,14 +136,14 @@ public class FefuService : IInitializable
 
     public Week GetStudyWeek()
     {
-        return GetStudyWeek(GetLocalTime());
+        return GetStudyWeek(LocalTime);
     }
     
     public Week GetStudyWeek(WeekType weekType)
     {
         return weekType == WeekType.Current
             ? GetStudyWeek() 
-            : GetStudyWeek(GetLocalTime().AddDays(7));
+            : GetStudyWeek(LocalTime.AddDays(7));
     }
     
     public Week GetStudyWeek(DateTime date, bool useSunday = false)
@@ -159,11 +160,6 @@ public class FefuService : IInitializable
         var first = date.AddDays(1).Date;
         var end = first.AddDays(5).Date;
         return new Week(first, end);
-    }
-
-    public DateTime GetLocalTime()
-    {
-        return ToLocalTime(DateTime.Now);
     }
 
     public DateTime ToLocalTime(DateTime time, bool isUtc = false)

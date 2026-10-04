@@ -19,7 +19,7 @@ public class SendSchedule : IChainState
 
     private async Task StartSending(WeekType weekType, string[] subgroups, ScheduleFormat format, CallbackQuery callbackQuery)
     {
-        var fileName = $"Расписание {_fefuService.GetLocalTime().ToStringWithCulture("d")}.xlsx";
+        var fileName = $"Расписание {_fefuService.LocalTime.ToStringWithCulture("d")}.xlsx";
         var schedule = await _fefuService.GetSchedule(weekType);
         schedule = _fefuService.FilterBySubgroups(schedule, subgroups);
 
@@ -34,7 +34,7 @@ public class SendSchedule : IChainState
                 break;
             case ScheduleFormat.Jpeg:
                 var tableImage = _imageService.GenerateStreamFromTable(streamTable);
-                tableImage = _imageService.ApplyBackground(tableImage);
+                tableImage = _imageService.ApplyBackground(tableImage, _fefuService.LocalTime);
                 await tableImage.CopyToAsync(resultStream);
                 break;
             default:
