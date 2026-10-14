@@ -96,14 +96,14 @@ public class FefuService : IInitializable
         request.Headers.Add("Cookie", $"_univer_identity={_environmentData.UniverId};_jwts={_environmentData.Jwts};LtpaToken2={_environmentData.LtpaToken};");
         request.Headers.Add("X-Requested-With", "XMLHttpRequest");
         
-        _logger.Debug("Sending fefu request");
+        _logger.Info("Sending fefu request");
         var response = await _client.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
         
         try
         {
             var returning = RepairFefuScheduleData(JsonSerializer.Deserialize<FefuScheduleData>(content)!).Events;
-            _logger.Debug("The data was successfully deserialized");
+            _logger.Info("The data was successfully deserialized");
             CompletedRequest?.Invoke();
             
             return returning;

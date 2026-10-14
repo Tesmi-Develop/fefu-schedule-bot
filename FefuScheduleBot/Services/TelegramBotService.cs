@@ -21,6 +21,7 @@ public class TelegramBotService : IInitializable, IStartable
     [Dependency] private readonly EnvironmentData _environmentData = null!;
     [Dependency] private readonly DependenciesContainer _container = null!;
     [Dependency] private readonly StatsService _statsService = null!;
+    [Dependency] private readonly ExceptionHandlerService _exceptionHandlerService = null!;
     private readonly Logger _logger = null!;
     
     private Dictionary<string, (ICommand, CommandAttribute)> _commands = new();
@@ -38,8 +39,16 @@ public class TelegramBotService : IInitializable, IStartable
     private Task OnUpdate(Update update)
     {
         if (update.Type != UpdateType.CallbackQuery || update.CallbackQuery is null) return Task.CompletedTask;
-            
-        ProcessCallbackQuery(update.CallbackQuery);
+
+        try
+        {
+            ProcessCallbackQuery(update.CallbackQuery);
+        }
+        catch (Exception e)
+        {
+            _exceptionHandlerService.ScheduleSendException(e);
+        }
+        
         return Task.CompletedTask;
     }
 
@@ -61,13 +70,15 @@ public class TelegramBotService : IInitializable, IStartable
     
     private void ProcessCallbackQuery(CallbackQuery callbackQuery)
     {
-        if (callbackQuery.Data is null || callbackQuery.Message is null) return;
+        if (callbackQuery.Data is null || callbackQuery.Message is null) 
+            return;
 
         var data = Utility.ParseQueryParams(callbackQuery.Data);
         var nextState = data["State"];
         data.Remove("State");
         
-        if (nextState is null) return;
+        if (nextState is null) 
+            return;
         var state = _allState[nextState];
         
         TransferToNextState(state, callbackQuery, Utility.ConvertQueryParams(data));
@@ -89,7 +100,7 @@ public class TelegramBotService : IInitializable, IStartable
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _exceptionHandlerService.ScheduleSendException(e);
             }
         }
     }
@@ -130,7 +141,7 @@ public class TelegramBotService : IInitializable, IStartable
 
     private Task OnError(Exception exception, HandleErrorSource source)
     {
-        _logger.Error(exception.Message);
+        _logger.Error(exception.ToString());
         return Task.CompletedTask;
     }
     
@@ -146,7 +157,31 @@ public class TelegramBotService : IInitializable, IStartable
         if (!_commands.TryGetValue(commandName, out var commandData))
             return;
 
-        await commandData.Item1.Execute(message, _container);
+        _logger.Info($"Starting command: /{commandName}");
+        
+        try
+        {
+            await commandData.Item1.Execute(message, _container);
+        }
+        catch (Exception e)
+        {
+            if (message.From is not null)
+                await SendSafeMessage(message.Chat,
+                    $"Не удалось выполнить команду /{commandData.Item2.Name}. Ошибка была отправлена разработчику");
+            _exceptionHandlerService.ScheduleSendException(e);
+        }
+    }
+
+    public async Task SendSafeMessage(ChatId chatId, string messageText)
+    {
+        try
+        {
+            await Client.SendMessage(chatId, messageText);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.ToString());
+        }
     }
     
     public async Task InitializeCommandsAsync(CancellationToken cancellationToken = default)

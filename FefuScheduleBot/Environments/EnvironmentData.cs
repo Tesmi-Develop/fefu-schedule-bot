@@ -19,6 +19,7 @@ public sealed class EnvironmentData
     [EnvironmentSpacing]
     
     public readonly string TelegramToken = null!;
+    public readonly string DeveloperTelegramId = null!;
     
     [EnvironmentSpacing]
     
