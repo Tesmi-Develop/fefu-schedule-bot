@@ -60,6 +60,7 @@ public static class Program
         DependencyManager.Register(config);
         DependencyManager.Register(DependencyManager.GetContainer());
         DependencyManager.Register(container);
+        DependencyManager.Register(LoggingManager.GetLogger("Global"));
         
         ServiceManager.CreateAll();
         ServiceManager.InitAll();

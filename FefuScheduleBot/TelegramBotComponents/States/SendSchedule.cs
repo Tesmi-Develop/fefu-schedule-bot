@@ -3,6 +3,7 @@ using FefuScheduleBot.Services;
 using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Dependencies;
+using Hypercube.Shared.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -16,6 +17,7 @@ public class SendSchedule : IChainState
     [Dependency] private readonly FefuService _fefuService = null!;
     [Dependency] private readonly ImageService _imageService = null!;
     [Dependency] private readonly Config _config = null!;
+    [Dependency] private readonly Logger _logger = null!;
 
     private async Task StartSending(WeekType weekType, string[] subgroups, ScheduleFormat format, CallbackQuery callbackQuery)
     {
@@ -61,6 +63,16 @@ public class SendSchedule : IChainState
             callbackQuery.Message.MessageId,
             "Расписание будет отправлено в ближайшее время"
             );
-        await StartSending(weekType, subgroups, ScheduleFormat.Jpeg, callbackQuery);
+
+        try
+        {
+            await StartSending(weekType, subgroups, ScheduleFormat.Jpeg, callbackQuery);
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e.ToString());
+            await _botService.SendSafeMessage(callbackQuery.Message!.Chat,
+                "Не удалось получить расписание. Попробуйте позже");
+        }
     }
 }
