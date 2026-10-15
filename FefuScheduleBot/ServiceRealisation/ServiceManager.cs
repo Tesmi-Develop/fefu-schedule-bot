@@ -1,66 +1,61 @@
-﻿using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
-using Hypercube.Shared.Utilities.Extensions;
+﻿using FefuScheduleBot.ServiceRealisation;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
 
-namespace FefuScheduleBot.ServiceRealisation;
+namespace Master.ServiceRealisation;
 
-public static class ServiceManager
+public class ServiceManager
 {
-    private static bool _isCreated;
-    private static readonly List<object> Services = [];
-    private static readonly Logger Logger = LoggingManager.GetLogger(nameof(ServiceManager));
-
-    public static void InitAll()
+    [Dependency] private readonly ILogger _logger = null!;
+    private bool _isCreated;
+    private readonly List<object> _services = [];
+    
+    public void InitAll()
     {
-        foreach (var service in Services)
+        foreach (var service in _services)
         {
-            var type = service.GetType();
-            if (!type.IsAssignableTo(typeof(IInitializable))) 
-                continue;
-            
-            ((IInitializable) service).Init();
-        }
-    }
-
-    public static void StartAll()
-    {
-        foreach (var service in Services)
-        {
-            var type = service.GetType();
-            if (!type.IsAssignableTo(typeof(IStartable))) 
+            if (service is not IInitializable initializable)
                 continue;
 
-            async Task Start()
+            try
             {
-                try
-                {
-                    await ((IStartable)service).Start();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+                initializable.Init();
             }
-
-            _ = Start();
+            catch (Exception e)
+            {
+                _logger.Error($"Service initialization failed because service [{service.GetType().Name}] threw an exception: \n{e}");
+                break;
+            }
         }
     }
 
-    private static void InjectLogger(object @object)
+    public void StartAll(CancellationToken token)
     {
-        var type = @object.GetType();
-
-        foreach (var field in  type.GetAllFields())
+        foreach (var service in _services)
         {
-            var fieldType = field.FieldType;
-            if (fieldType.IsAssignableTo(typeof(ILogger)))
+            if (service is not IStartable startable)
+                continue;
+
+            var serviceName = service.GetType().Name;
+
+            try
             {
-                field.SetValue(@object, LoggingManager.GetLogger(type.Name));
+                startable.Start(token).ContinueWith(task =>
+                {
+                    if (!task.IsFaulted)
+                        return;
+
+                    _logger.Error($"Failed to start service [{serviceName}] due to an unhandled exception in task: \n{task.Exception}");
+                }, token);
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"Service startup failed because service [{serviceName}] threw an exception: \n{e}");
             }
         }
     }
     
-    public static void CreateAll()
+    public void CreateAll(DependenciesContainer container)
     {
         if (_isCreated) 
             return;
@@ -79,20 +74,18 @@ public static class ServiceManager
                 if (!Attribute.IsDefined(type, typeof(ServiceAttribute))) 
                     continue;
 
-                DependencyManager.Register(type, type);
+                container.Register(type);
                 types.Add(type);
             }
         }
         
-        DependencyManager.InstantiateAll();
+        container.ResolveAll();
 
         foreach (var ctor in types)
         {
-            var service = DependencyManager.Resolve(ctor);
-            Services.Add(service);
-
-            InjectLogger(service);
-            Logger.Debug($"Instantiated {ctor.Name}");
+            var service = container.Resolve(ctor);
+            _services.Add(service);
+            _logger.Debug($"Service [{service.GetType().Name}] has been created.");
         }
     }
 }

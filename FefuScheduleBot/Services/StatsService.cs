@@ -1,8 +1,8 @@
 ﻿using FefuScheduleBot.Data;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.ServiceRealisation;
-using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
 
 namespace FefuScheduleBot.Services;
 
@@ -11,7 +11,7 @@ public class StatsService : IInitializable
 {
     [Dependency] private readonly FefuService _fefuService = null!;
     [Dependency] private readonly MongoService _mongoService = null!;
-    private readonly Logger _logger = null!;
+    [Dependency] private readonly Logger _logger = null!;
     
     private void MakeLog()
     {
@@ -23,7 +23,7 @@ public class StatsService : IInitializable
             draft.Time = DateTime.Now.ToUniversalTime();
         });
         
-        _logger.Debug("Added new log in stats");
+        _logger.Info("Added new log in stats");
     }
 
     public StatsInfo CollectInfo()

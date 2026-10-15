@@ -1,30 +1,18 @@
 ﻿using System.Text.Json;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
-using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
-using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
+using Master.ServiceRealisation;
 
 namespace FefuScheduleBot;
 
 public static class Program
 {
-    public static bool IsDebug
-    {
-        get
-        {
-#if DEBUG
-            return true;
-#else
-            return false;
-#endif
-        }
-    }
-
-    public static DependenciesContainer DependenciesContainer = null!;
-    private static bool _running;
+    private static readonly DependenciesContainer Container = new();
     private const string ConfigName = "Config.json";
+    private static string _loggerTimeZoneId = "UTC";
 
     private static Config LoadConfig()
     {
@@ -40,6 +28,17 @@ public static class Program
         return config;
     }
     
+    private static void PrepareLogger()
+    {
+        Container.Register<ILogger>((_, target) => CreateLogger(target), DependencyLifetime.Transient);
+        Container.Register<Logger>((_, target) => (Logger)CreateLogger(target), DependencyLifetime.Transient);
+    }
+
+    private static ILogger CreateLogger(object? target = null)
+    {
+        return target is null ? new MyLogger(_loggerTimeZoneId) : new MyLogger(target, _loggerTimeZoneId);
+    }
+    
     public static Task Main()
     {
         var solutionPath = Path.GetFullPath(Path.Combine("..", "..", ".."));
@@ -48,36 +47,31 @@ public static class Program
         if (!File.Exists(filePath))
             filePath = ".env";
 
-        var container = TryLoadEnv(filePath);
-        if (container is null)
+        var environmentData = TryLoadEnv(filePath);
+        if (environmentData is null)
             return Task.CompletedTask;
         
         var config = LoadConfig();
+        _loggerTimeZoneId = config.LoggerTimeZoneId;
+        PrepareLogger();
         
-        DependencyManager.InitThread();
-        DependenciesContainer = DependencyManager.GetContainer();
+        Container.Register<ServiceManager>();
+        Container.RegisterSingleton<Config>(config);
+        Container.RegisterSingleton<DependenciesContainer>(Container);
+        Container.RegisterSingleton<EnvironmentData>(environmentData);
         
-        DependencyManager.Register(config);
-        DependencyManager.Register(DependencyManager.GetContainer());
-        DependencyManager.Register(container);
-        DependencyManager.Register(LoggingManager.GetLogger("Global"));
-        
-        ServiceManager.CreateAll();
-        ServiceManager.InitAll();
-        ServiceManager.StartAll();
+        var serviceManager = Container.Resolve<ServiceManager>();
+        serviceManager.CreateAll(Container);
+        serviceManager.InitAll();
+        serviceManager.StartAll(CancellationToken.None);
 
-        _running = true;
-        while (_running)
-        {
+        while (true)
             Thread.Sleep(10);
-        }
-
-        return Task.CompletedTask;
     }
     
     private static EnvironmentData? TryLoadEnv(string path = ".env")
     {
-        var logger = LoggingManager.GetLogger("environment");
+        var logger = CreateLogger();
         var container = new EnvironmentContainer();
         
         if (container.TryLoad(path))
@@ -85,10 +79,5 @@ public static class Program
         
         logger.Error($"Failed to load environment file. Created template file: {path}");
         return null;
-    }
-    
-    public static void Shutdown()
-    {
-        _running = false;
     }
 }

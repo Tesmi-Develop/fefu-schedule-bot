@@ -1,7 +1,7 @@
 ﻿using dotenv.net;
 using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;
-using Hypercube.Shared.Utilities.Extensions;
+using Hypercube.Utilities.Extensions;
 using JetBrains.Annotations;
 
 namespace FefuScheduleBot.Environments;

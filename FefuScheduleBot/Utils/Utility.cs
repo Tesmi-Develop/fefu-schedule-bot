@@ -1,5 +1,4 @@
 ﻿using System.Collections.Specialized;
-using FefuScheduleBot.Services;
 
 namespace FefuScheduleBot.Utils;
 

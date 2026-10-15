@@ -3,8 +3,8 @@ using FefuScheduleBot.Environments;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
-using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
 using JetBrains.Annotations;
 using MongoDB.Driver;
 
@@ -21,7 +21,7 @@ public sealed class MongoService : IInitializable
     private FrozenDictionary<Type, object> _collections = null!;
     
     [Dependency] private readonly EnvironmentData _environmentData = null!;
-    private readonly Logger _logger = null!;
+    [Dependency] private readonly Logger _logger = null!;
     private readonly Dictionary<string, object> _dataWrappers = new();
     
     public void Init()

@@ -2,8 +2,8 @@
 using FefuScheduleBot.Services;
 using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;
-using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -50,6 +50,7 @@ public class SendSchedule : IChainState
                 InputFile.FromStream(resultStream, fileName)),
             _ => await _botService.Client.SendDocument(callbackQuery.Message!.Chat, InputFile.FromStream(resultStream, fileName)),
         };
+        _logger.Info("Sent new schedule");
     }
     
     public async Task Process(TelegramBotService generator, CallbackQuery callbackQuery, string data)

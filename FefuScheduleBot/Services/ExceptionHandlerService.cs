@@ -1,16 +1,22 @@
 ﻿using FefuScheduleBot.Environments;
 using FefuScheduleBot.ServiceRealisation;
-using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
 
 namespace FefuScheduleBot.Services;
 
 [Service]
-public class ExceptionHandlerService
+public class ExceptionHandlerService : IInitializable
 {
     [Dependency] private readonly EnvironmentData _environmentData = null!;
     [Dependency] private readonly TelegramBotService _telegramBotService = null!;
-    private readonly Logger _logger = null!;
+    [Dependency] private readonly EventBus _eventBus = null!;
+    [Dependency] private readonly Logger _logger = null!;
+    
+    public void Init()
+    {
+        _eventBus.ScheduledSendException += ScheduleSendException;
+    }
     
     public void ScheduleSendException(Exception exception)
     {

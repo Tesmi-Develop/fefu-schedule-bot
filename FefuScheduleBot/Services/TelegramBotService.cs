@@ -4,8 +4,8 @@ using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.TelegramBotComponents;
 using FefuScheduleBot.TelegramBotComponents.States;
 using FefuScheduleBot.Utils;
-using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -21,13 +21,66 @@ public class TelegramBotService : IInitializable, IStartable
     [Dependency] private readonly EnvironmentData _environmentData = null!;
     [Dependency] private readonly DependenciesContainer _container = null!;
     [Dependency] private readonly StatsService _statsService = null!;
-    [Dependency] private readonly ExceptionHandlerService _exceptionHandlerService = null!;
-    private readonly Logger _logger = null!;
+    [Dependency] private readonly EventBus _eventBus = null!;
+    [Dependency] private readonly Logger _logger = null!;
     
     private Dictionary<string, (ICommand, CommandAttribute)> _commands = new();
     private CancellationTokenSource _cancellationToken = null!;
     private string[] _excludeList = [];
     private readonly Dictionary<string, Type> _allState = new();
+    
+    public void Init()
+    {
+        RegisterStates();
+    }
+    
+    public async Task Start(CancellationToken token)
+    {
+        _commands = GetCommands(_container);
+        
+        if (_environmentData.TelegramToken == "None") 
+            return;
+
+        if (_environmentData.ExcludeList != "None")
+            _excludeList = _environmentData.ExcludeList.Split(" ");
+        
+        Client = new TelegramBotClient(_environmentData.TelegramToken, cancellationToken: token);
+        
+        ConnectToEvents();
+
+        await InitializeCommandsAsync();
+        var me = await Client.GetMe();
+        _logger.Info($"@{me.Username} is running...");
+    }
+    
+    private static Dictionary<string, (ICommand Command, CommandAttribute Attribute)> GetCommands(
+        DependenciesContainer container, 
+        Assembly? assembly = null)
+    {
+        var targetAssembly = assembly ?? Assembly.GetExecutingAssembly();
+    
+        var commandTypes = targetAssembly
+            .GetTypes()
+            .Where(type => type is { IsClass: true, IsAbstract: false } 
+                           && typeof(ICommand).IsAssignableFrom(type) 
+                           && type.IsDefined(typeof(CommandAttribute), inherit: false));
+
+        var result = new Dictionary<string, (ICommand Command, CommandAttribute Attribute)>();
+
+        foreach (var type in commandTypes)
+        {
+            var attribute = type.GetCustomAttribute<CommandAttribute>();
+            if (attribute is null)
+                continue;
+
+            if (Activator.CreateInstance(type) is not ICommand command)
+                continue;
+
+            result[attribute.Name] = (command, attribute);
+        }
+
+        return result;
+    }
     
     private void ConnectToEvents()
     {
@@ -46,7 +99,7 @@ public class TelegramBotService : IInitializable, IStartable
         }
         catch (Exception e)
         {
-            _exceptionHandlerService.ScheduleSendException(e);
+            _eventBus.OnScheduledSendException(e);
         }
         
         return Task.CompletedTask;
@@ -100,7 +153,7 @@ public class TelegramBotService : IInitializable, IStartable
             }
             catch (Exception e)
             {
-                _exceptionHandlerService.ScheduleSendException(e);
+                _eventBus.OnScheduledSendException(e);
             }
         }
     }
@@ -109,36 +162,7 @@ public class TelegramBotService : IInitializable, IStartable
     {
         return $"State={typeof(T).Name}&{additionalData}";
     }
-
-    private static Dictionary<string, (ICommand Command, CommandAttribute Attribute)> GetCommands(
-        DependenciesContainer container, 
-        Assembly? assembly = null)
-    {
-        var targetAssembly = assembly ?? Assembly.GetExecutingAssembly();
     
-        var commandTypes = targetAssembly
-            .GetTypes()
-            .Where(type => type is { IsClass: true, IsAbstract: false } 
-                           && typeof(ICommand).IsAssignableFrom(type) 
-                           && type.IsDefined(typeof(CommandAttribute), inherit: false));
-
-        var result = new Dictionary<string, (ICommand Command, CommandAttribute Attribute)>();
-
-        foreach (var type in commandTypes)
-        {
-            var attribute = type.GetCustomAttribute<CommandAttribute>();
-            if (attribute is null)
-                continue;
-
-            if (Activator.CreateInstance(type) is not ICommand command)
-                continue;
-
-            result[attribute.Name] = (command, attribute);
-        }
-
-        return result;
-    }
-
     private Task OnError(Exception exception, HandleErrorSource source)
     {
         _logger.Error(exception.ToString());
@@ -168,7 +192,7 @@ public class TelegramBotService : IInitializable, IStartable
             if (message.From is not null)
                 await SendSafeMessage(message.Chat,
                     $"Не удалось выполнить команду /{commandData.Item2.Name}. Ошибка была отправлена разработчику");
-            _exceptionHandlerService.ScheduleSendException(e);
+            _eventBus.OnScheduledSendException(e);
         }
     }
 
@@ -199,11 +223,6 @@ public class TelegramBotService : IInitializable, IStartable
         await Client.SetMyCommands(botCommands, cancellationToken: cancellationToken);
     }
     
-    public void Init()
-    {
-        RegisterStates();
-    }
-    
     public async Task StartNewScheduleRequest(ChatId id, string[] subgroups)
     {
         var request = new RequestWeekType();
@@ -226,25 +245,5 @@ public class TelegramBotService : IInitializable, IStartable
         _container.Inject(request);
         
         await request.Start(this, id, userId);
-    }
-    
-    public async Task Start()
-    {
-        _commands = GetCommands(_container);
-        
-        if (_environmentData.TelegramToken == "None") 
-            return;
-
-        if (_environmentData.ExcludeList != "None")
-            _excludeList = _environmentData.ExcludeList.Split(" ");
-        
-        _cancellationToken = new CancellationTokenSource();
-        Client = new TelegramBotClient(_environmentData.TelegramToken, cancellationToken: _cancellationToken.Token);
-        
-        ConnectToEvents();
-
-        await InitializeCommandsAsync();
-        var me = await Client.GetMe();
-        _logger.Info($"@{me.Username} is running...");
     }
 }

@@ -2,7 +2,7 @@
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.Services;
 using FefuScheduleBot.Utils;
-using Hypercube.Dependencies;
+using Hypercube.Utilities.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;

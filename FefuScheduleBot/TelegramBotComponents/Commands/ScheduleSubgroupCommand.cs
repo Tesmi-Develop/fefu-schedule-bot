@@ -1,5 +1,5 @@
 ﻿using FefuScheduleBot.Services;
-using Hypercube.Dependencies;
+using Hypercube.Utilities.Dependencies;
 using Telegram.Bot.Types;
 
 namespace FefuScheduleBot.TelegramBotComponents.Commands;

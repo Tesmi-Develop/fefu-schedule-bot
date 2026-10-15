@@ -2,5 +2,5 @@
 
 public interface IStartable
 { 
-    Task Start();
+    Task Start(CancellationToken token);
 }

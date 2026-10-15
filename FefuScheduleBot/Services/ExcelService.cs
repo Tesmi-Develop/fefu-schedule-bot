@@ -3,8 +3,8 @@ using FefuScheduleBot.Classes;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils.Extensions;
-using Hypercube.Dependencies;
 using Hypercube.Mathematics.Vectors;
+using Hypercube.Utilities.Dependencies;
 using Spire.Xls;
 using Style = FefuScheduleBot.Classes.Style;
 

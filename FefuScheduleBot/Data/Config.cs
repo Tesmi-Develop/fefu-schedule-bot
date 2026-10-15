@@ -6,6 +6,9 @@ namespace FefuScheduleBot.Data;
 [Serializable]
 public class Config
 {
+    [JsonPropertyName("loggerTimeZoneId")]
+    public required string LoggerTimeZoneId { get; set; }
+    
     [JsonPropertyName("commonDisciplines")]
     public required int[] CommonDisciplines { get; set; }
     

@@ -6,8 +6,8 @@ using FefuScheduleBot.Classes;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
-using Hypercube.Dependencies;
-using Hypercube.Shared.Logging;
+using Hypercube.Utilities.Debugging.Logger;
+using Hypercube.Utilities.Dependencies;
 using JetBrains.Annotations;
 
 // ReSharper disable CoVariantArrayConversion
@@ -28,7 +28,7 @@ public class FefuService : IInitializable
     
     [Dependency] private readonly EnvironmentData _environmentData = null!;
     [Dependency] private readonly Config _config = null!;
-    private readonly Logger _logger = null!;
+    [Dependency] private readonly Logger _logger = null!;
     
     private const string Url = "https://univer.dvfu.ru/";
     private const string ScheduleApi = "schedule/get";

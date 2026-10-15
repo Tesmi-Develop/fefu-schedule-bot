@@ -1,5 +1,5 @@
 ﻿using FefuScheduleBot.Services;
-using Hypercube.Dependencies;
+using Hypercube.Utilities.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -8,16 +8,6 @@ namespace FefuScheduleBot.TelegramBotComponents.Commands;
 [Command("missingdisciplines", "Получить новые дисциплины")]
 public class MissingDisciplinesCommand : ICommand
 {
-    public void Init(DependenciesContainer container)
-    {
-        // Do nothing
-    }
-
-    public void Start(DependenciesContainer container)
-    {
-        // Do nothing
-    }
-
     public async Task Execute(Message message, DependenciesContainer container)
     {
         var fefuService = container.Resolve<FefuService>();
