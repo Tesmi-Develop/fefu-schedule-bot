@@ -15,11 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdiplus \
     fontconfig \
     libfontconfig1 \
-    cabextract \
-    xfonts-utils \
-    && apt-get install -y --no-install-recommends ttf-mscorefonts-installer \
-    && fc-cache -f -v \
     && rm -rf /var/lib/apt/lists/*
+
+COPY FefuScheduleBot/Fonts/ /usr/share/fonts/truetype/custom/
+
+RUN fc-cache -f -v
 
 COPY --from=build /app/publish .
 
