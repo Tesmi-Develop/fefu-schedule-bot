@@ -11,21 +11,25 @@ RUN dotnet publish "FefuScheduleBot.csproj" -c Release -o /app/publish /p:UseApp
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# 1. Добавляем репозитории contrib и non-free для доступа к пакетам шрифтов Microsoft в Debian
-RUN echo "deb http://deb.debian.org/debian bookworm contrib non-free" > /etc/apt/sources.list.d/contrib.list \
-    && echo "deb http://deb.debian.org/debian bookworm-updates contrib non-free" >> /etc/apt/sources.list.d/contrib.list
-
-# 2. Устанавливаем libgdiplus, fontconfig и пакет шрифтов MS
+# Устанавливаем графические библиотеки
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdiplus \
     fontconfig \
     libfontconfig1 \
-    && echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
-    && apt-get install -y --no-install-recommends ttf-mscorefonts-installer \
-    && rm -rf /var/lib/apt/lists/* \
-    && fc-cache -f -v
+    && rm -rf /var/lib/apt/lists/*
 
-# 3. Указываем переменные окружения, чтобы FreeSpire и fontconfig гарантированно нашли системные пути шрифтов
+# Создаем директорию для шрифтов
+RUN mkdir -p /usr/share/fonts/truetype/custom
+
+# Копируем шрифты
+COPY FefuScheduleBot/Fonts/ /usr/share/fonts/truetype/custom/
+
+# Создаем явную конфигурацию fontconfig, чтобы система гарантированно просканировала папку
+RUN echo '<?xml version="1.0"?><fontconfig><dir>/usr/share/fonts/truetype/custom</dir></fontconfig>' > /etc/fonts/local.conf
+
+# Обновляем кэш шрифтов
+RUN fc-cache -f -v
+
 ENV LD_LIBRARY_PATH=/usr/share/fonts:/usr/local/share/fonts
 
 COPY --from=build /app/publish .
