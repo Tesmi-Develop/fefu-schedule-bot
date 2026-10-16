@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
+using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
 using Hypercube.Utilities.Debugging.Logger;
 using Hypercube.Utilities.Dependencies;
-using Master.ServiceRealisation;
 
 namespace FefuScheduleBot;
 

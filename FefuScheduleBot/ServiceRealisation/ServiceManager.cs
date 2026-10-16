@@ -1,8 +1,7 @@
-﻿using FefuScheduleBot.ServiceRealisation;
-using Hypercube.Utilities.Debugging.Logger;
+﻿using Hypercube.Utilities.Debugging.Logger;
 using Hypercube.Utilities.Dependencies;
 
-namespace Master.ServiceRealisation;
+namespace FefuScheduleBot.ServiceRealisation;
 
 public class ServiceManager
 {
