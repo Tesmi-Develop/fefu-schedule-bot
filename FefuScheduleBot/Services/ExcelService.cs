@@ -58,7 +58,7 @@ public class ExcelService
         range.Style.HorizontalAlignment = style.HorizontalAlignment;
         range.Style.Font.IsBold = style.TextBold;
         range.Style.Font.Color = style.TextColor;
-        range.Style.Font.FontName = "Arial";
+        //range.Style.Font.FontName = "Arial";
     }
     
     private void AddAuthor(Worksheet sheet, ref Vector2i startPosition)
