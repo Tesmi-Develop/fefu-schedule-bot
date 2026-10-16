@@ -47,8 +47,7 @@ public static class Program
         if (!File.Exists(filePath))
             filePath = ".env";
 
-        var environmentData = TryLoadEnv(filePath);
-        if (environmentData is null)
+        if (!TryLoadEnv(out var environmentData, filePath))
             return Task.CompletedTask;
         
         var config = LoadConfig();
@@ -69,15 +68,22 @@ public static class Program
             Thread.Sleep(10);
     }
     
-    private static EnvironmentData? TryLoadEnv(string path = ".env")
+    private static bool TryLoadEnv(out EnvironmentData result, string path = ".env")
     {
-        var logger = CreateLogger();
-        var container = new EnvironmentContainer();
+        result = null;
         
-        if (container.TryLoad(path))
-            return container.Data;
+        var logger = CreateLogger();
+
+        if (File.Exists(path))
+        {
+            result = EnvSerializer.Deserialize<EnvironmentData>(File.ReadAllText((path)));
+            return true;
+        }
+
+        var content = EnvSerializer.Serialize(new EnvironmentData());
+        File.WriteAllText(path, content);
         
         logger.Error($"Failed to load environment file. Created template file: {path}");
-        return null;
+        return false;
     }
 }

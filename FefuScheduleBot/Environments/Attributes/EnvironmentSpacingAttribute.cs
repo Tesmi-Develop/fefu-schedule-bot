@@ -1,4 +1,4 @@
-﻿namespace FefuScheduleBot.Environments;
+﻿namespace FefuScheduleBot.Environments.Attributes;
 
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class EnvironmentSpacingAttribute : Attribute

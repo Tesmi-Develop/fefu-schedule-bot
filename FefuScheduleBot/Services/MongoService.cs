@@ -36,7 +36,7 @@ public sealed class MongoService : IInitializable
 
         var dict = new Dictionary<Type, object>();
 
-        foreach (var (type, attribute) in ReflectionHelper.GetAllTypes<CollectionAttribute>())
+        foreach (var (type, attribute) in CustomReflectionHelper.GetAllTypes<CollectionAttribute>())
         {
             var name = attribute.Name ?? type.Name;
 

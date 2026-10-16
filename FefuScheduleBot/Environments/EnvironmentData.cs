@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using FefuScheduleBot.Environments.Attributes;
+using JetBrains.Annotations;
 
 namespace FefuScheduleBot.Environments;
 

@@ -107,7 +107,7 @@ public class TelegramBotService : IInitializable, IStartable
 
     private void RegisterStates()
     {
-        foreach (var (type, _) in ReflectionHelper.GetAllTypes<StateAttribute>())
+        foreach (var (type, _) in CustomReflectionHelper.GetAllTypes<StateAttribute>())
         {
             var targetType = typeof(IChainState);
             

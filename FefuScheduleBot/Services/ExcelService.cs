@@ -17,18 +17,6 @@ public class ExcelService
     [Dependency] private readonly Config _config = null!;
     [Dependency] private readonly FefuService _fefuService = null!;
 
-    public void SaveTableToFile(Worksheet worksheet, string name = "")
-    {
-        var fileName = name == string.Empty
-            ? $"Расписание {_fefuService.LocalTime.ToStringWithCulture("d")}.xlsx"
-            : $"{name}.xlsx";
-        
-        if (File.Exists(fileName))
-            File.Delete(fileName);
-        
-        worksheet.SaveToFile(fileName, string.Empty);
-    }
-    
     public MemoryStream GenerateStreamTable(Schedule schedule)
     {
         var startPosition = new Vector2i(1, 1);
@@ -58,7 +46,6 @@ public class ExcelService
         range.Style.HorizontalAlignment = style.HorizontalAlignment;
         range.Style.Font.IsBold = style.TextBold;
         range.Style.Font.Color = style.TextColor;
-        //range.Style.Font.FontName = "Arial";
     }
     
     private void AddAuthor(Worksheet sheet, ref Vector2i startPosition)
