@@ -14,7 +14,7 @@ public sealed class EnvironmentData
     [EnvironmentSpacing]
     
     [EnvironmentComment("Uri to connect to Redis")]
-    public readonly string RedisDatabaseUri = "localhost:6379";
+    public readonly string RedisUri = "localhost:6379";
     
     [EnvironmentSpacing]
     

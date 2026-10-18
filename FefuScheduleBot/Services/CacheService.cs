@@ -25,8 +25,8 @@ public class CacheService : IInitializable
     
     public void Init()
     {
-        _logger.Debug($"Try connection to redis server: {_environmentData.RedisDatabaseUri}");
-        _redis = ConnectionMultiplexer.Connect(_environmentData.RedisDatabaseUri);
+        _logger.Debug($"Try connection to redis server: {_environmentData.RedisUri}");
+        _redis = ConnectionMultiplexer.Connect(_environmentData.RedisUri);
         _database = _redis.GetDatabase();
     }
 
