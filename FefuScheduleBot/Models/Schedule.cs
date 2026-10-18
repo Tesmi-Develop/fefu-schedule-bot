@@ -1,12 +1,12 @@
 ﻿using System.Collections;
 using System.Security.Cryptography;
 using System.Text;
-using FefuScheduleBot.Data;
 using FefuScheduleBot.Utils.Extensions;
 using JetBrains.Annotations;
+
 // ReSharper disable SuspiciousTypeConversion.Global
 
-namespace FefuScheduleBot.Classes;
+namespace FefuScheduleBot.Models;
 
 public class SchedulePairList {
     private readonly List<FefuEvent> _events;
@@ -131,10 +131,13 @@ public class Schedule : IEnumerable<SchedulePairList>
         using var memoryStream = new MemoryStream();
         using var writer = new BinaryWriter(memoryStream, Encoding.UTF8);
 
-        foreach (var (_, timeSlots) in Days)
+        foreach (var (day, timeSlots) in Days)
         {
-            foreach (var (_, events) in timeSlots)
+            writer.Write(day.Ticks);
+
+            foreach (var (time, events) in timeSlots)
             {
+                writer.Write(time);
                 writer.Write(events.Count);
 
                 foreach (var @event in events)

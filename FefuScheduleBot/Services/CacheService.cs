@@ -1,14 +1,13 @@
 ﻿using System.Text.Json;
-using FefuScheduleBot.Classes;
-using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
+using FefuScheduleBot.Models;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Utilities.Debugging.Logger;
 using Hypercube.Utilities.Dependencies;
 using StackExchange.Redis;
-using Config = FefuScheduleBot.Data.Config;
+using Config = FefuScheduleBot.Models.Config;
 
 namespace FefuScheduleBot.Services;
 

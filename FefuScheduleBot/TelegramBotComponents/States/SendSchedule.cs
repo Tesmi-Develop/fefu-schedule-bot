@@ -1,5 +1,4 @@
-﻿using FefuScheduleBot.Classes;
-using FefuScheduleBot.Data;
+﻿using FefuScheduleBot.Models;
 using FefuScheduleBot.Services;
 using FefuScheduleBot.Utils;
 using FefuScheduleBot.Utils.Extensions;

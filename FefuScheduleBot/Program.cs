@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
-using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
+using FefuScheduleBot.Models;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils;
 using Hypercube.Utilities.Debugging.Logger;

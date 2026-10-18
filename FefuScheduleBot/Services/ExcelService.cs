@@ -1,12 +1,11 @@
 ﻿using System.Drawing;
-using FefuScheduleBot.Classes;
-using FefuScheduleBot.Data;
+using FefuScheduleBot.Models;
 using FefuScheduleBot.ServiceRealisation;
 using FefuScheduleBot.Utils.Extensions;
 using Hypercube.Mathematics.Vectors;
 using Hypercube.Utilities.Dependencies;
 using Spire.Xls;
-using Style = FefuScheduleBot.Classes.Style;
+using Style = FefuScheduleBot.Models.Style;
 
 namespace FefuScheduleBot.Services;
 

@@ -1,4 +1,4 @@
-﻿namespace FefuScheduleBot.Data;
+﻿namespace FefuScheduleBot.Models;
 
 public class StatsInfo
 {

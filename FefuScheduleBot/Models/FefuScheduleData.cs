@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace FefuScheduleBot.Data;
+namespace FefuScheduleBot.Models;
 
 [Serializable]
 public class FefuScheduleData

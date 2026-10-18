@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using Spire.Xls;
 
-namespace FefuScheduleBot.Classes;
+namespace FefuScheduleBot.Models;
 
 public struct Style
 {

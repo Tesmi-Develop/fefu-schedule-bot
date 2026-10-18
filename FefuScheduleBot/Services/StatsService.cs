@@ -1,4 +1,4 @@
-﻿using FefuScheduleBot.Data;
+﻿using FefuScheduleBot.Models;
 using FefuScheduleBot.Schemas;
 using FefuScheduleBot.ServiceRealisation;
 using Hypercube.Utilities.Debugging.Logger;

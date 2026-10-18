@@ -2,10 +2,9 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using FefuScheduleBot.Classes;
 using FefuScheduleBot.ServiceRealisation;
-using FefuScheduleBot.Data;
 using FefuScheduleBot.Environments;
+using FefuScheduleBot.Models;
 using Hypercube.Utilities.Debugging.Logger;
 using Hypercube.Utilities.Dependencies;
 using JetBrains.Annotations;

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace FefuScheduleBot.Data;
+namespace FefuScheduleBot.Models;
 
 public class Week : IEnumerable<DateTime>
 {
