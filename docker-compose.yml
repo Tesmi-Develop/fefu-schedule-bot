@@ -7,10 +7,12 @@
     restart: always
     depends_on:
       - mongodb
+      - redis-server
     env_file:
       - ./FefuScheduleBot/.env
     volumes:
       - ./FefuScheduleBot/.env:/app/.env
+
   mongodb:
     image: mongo:latest
     container_name: fefu-bot-mongo
@@ -18,5 +20,13 @@
     volumes:
       - mongo_data:/data/db
 
+  redis-server:
+    image: redis:latest
+    container_name: redis-server
+    restart: always
+    ports:
+      - "6379:6379"
+
 volumes:
   mongo_data:
+  redis_data:

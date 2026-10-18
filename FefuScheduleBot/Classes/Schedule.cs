@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Security.Cryptography;
+using System.Text;
 using FefuScheduleBot.Data;
 using FefuScheduleBot.Utils.Extensions;
 using JetBrains.Annotations;
@@ -123,7 +125,29 @@ public class Schedule : IEnumerable<SchedulePairList>
         
         events.Add(@event);
     }
+    
+    public string ComputeHash()
+    {
+        using var memoryStream = new MemoryStream();
+        using var writer = new BinaryWriter(memoryStream, Encoding.UTF8);
 
+        foreach (var (_, timeSlots) in Days)
+        {
+            foreach (var (_, events) in timeSlots)
+            {
+                writer.Write(events.Count);
+
+                foreach (var @event in events)
+                    writer.Write(@event.DisciplineId);
+            }
+        }
+
+        memoryStream.Position = 0;
+        var hashBytes = SHA256.HashData(memoryStream);
+
+        return Convert.ToHexString(hashBytes);
+    }
+    
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();

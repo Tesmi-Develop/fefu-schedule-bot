@@ -51,15 +51,12 @@ public static class Utility
     public static string EncodeSubgroups(IEnumerable<string> selectedSubgroups, string[] availableSubgroups)
     {
         ushort mask = 0;
-        var selectedSet = selectedSubgroups.ToHashSet();
+        var sortedSelected = selectedSubgroups.OrderBy(s => s).ToArray();
+        var selectedSet = sortedSelected.ToHashSet();
 
         for (var i = 0; i < availableSubgroups.Length; i++)
-        {
             if (selectedSet.Contains(availableSubgroups[i]))
-            {
                 mask |= (ushort)(1 << i);
-            }
-        }
 
         return mask.ToString("X");
     }
@@ -67,9 +64,7 @@ public static class Utility
     public static string[] DecodeSubgroups(string hexMask, string[] availableSubgroups)
     {
         if (!ushort.TryParse(hexMask, System.Globalization.NumberStyles.HexNumber, null, out var mask))
-        {
             return [];
-        }
 
         var selected = new List<string>();
 

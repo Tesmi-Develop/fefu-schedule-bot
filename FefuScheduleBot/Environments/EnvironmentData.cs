@@ -13,6 +13,11 @@ public sealed class EnvironmentData
     
     [EnvironmentSpacing]
     
+    [EnvironmentComment("Uri to connect to Redis")]
+    public readonly string RedisDatabaseUri = "localhost:6379";
+    
+    [EnvironmentSpacing]
+    
     public readonly string UniverId = null!;
     public readonly string Jwts = null!;
     public readonly string LtpaToken = null!;

@@ -28,4 +28,9 @@ public class Week : IEnumerable<DateTime>
     {
         return GetEnumerator();
     }
+    
+    public override string ToString()
+    {
+        return $"{Start:dd.MM.yyyy} - {End:dd.MM.yyyy}";
+    }
 }

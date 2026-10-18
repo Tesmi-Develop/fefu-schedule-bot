@@ -172,9 +172,10 @@ public class FefuService : IInitializable
         var week = GetStudyWeek(weekType);
         var events = await GetEvents(week.Start, week.End);
 
-        if (events is not null) return new Schedule(week, events);
-        _logger.Warning("Failed to retrieve the current schedule");
+        if (events is not null) 
+            return new Schedule(week, events);
         
+        _logger.Warning("Failed to retrieve the current schedule");
         return new Schedule(week, []);
     }
 
