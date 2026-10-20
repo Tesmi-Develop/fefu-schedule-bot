@@ -1,4 +1,5 @@
-﻿using FefuScheduleBot.Schemas;
+﻿using FefuScheduleBot.Models;
+using FefuScheduleBot.Schemas;
 using FefuScheduleBot.Services;
 using Hypercube.Utilities.Dependencies;
 using Telegram.Bot;
@@ -6,7 +7,7 @@ using Telegram.Bot.Types;
 
 namespace FefuScheduleBot.TelegramBotComponents.Commands;
 
-[Command("my_schedule", "Сгенерировать моё расписание")]
+[Command("my_schedule", "Сгенерировать моё расписание", CommandPriority.MySchedule)]
 public class MyScheduleCommand : ICommand
 {
     public Task Execute(Message message, DependenciesContainer container)

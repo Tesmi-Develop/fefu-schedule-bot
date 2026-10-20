@@ -1,10 +1,11 @@
-﻿using FefuScheduleBot.Services;
+﻿using FefuScheduleBot.Models;
+using FefuScheduleBot.Services;
 using Hypercube.Utilities.Dependencies;
 using Telegram.Bot.Types;
 
 namespace FefuScheduleBot.TelegramBotComponents.Commands;
 
-[Command("settings", "Настроить подгруппы")]
+[Command("settings", "Настроить подгруппы", CommandPriority.Default)]
 public class SettingsCommand : ICommand
 {
     public Task Execute(Message message, DependenciesContainer container)

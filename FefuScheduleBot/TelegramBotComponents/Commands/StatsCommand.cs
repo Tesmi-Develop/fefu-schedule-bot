@@ -1,11 +1,12 @@
-﻿using FefuScheduleBot.Services;
+﻿using FefuScheduleBot.Models;
+using FefuScheduleBot.Services;
 using Hypercube.Utilities.Dependencies;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace FefuScheduleBot.TelegramBotComponents.Commands;
 
-[Command("stats", "Посмотреть статистику")]
+[Command("stats", "Посмотреть статистику", CommandPriority.Low)]
 public class StatsCommand : ICommand
 {
     public async Task Execute(Message message, DependenciesContainer container)

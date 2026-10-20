@@ -48,8 +48,8 @@ public class TelegramBotService : IInitializable, IStartable
         
         ConnectToEvents();
 
-        await InitializeCommandsAsync();
-        var me = await Client.GetMe();
+        await InitializeCommandsAsync(token);
+        var me = await Client.GetMe(cancellationToken: token);
         _logger.Info($"@{me.Username} is running...");
     }
     
@@ -207,13 +207,14 @@ public class TelegramBotService : IInitializable, IStartable
             _logger.Error(e.ToString());
         }
     }
-    
-    public async Task InitializeCommandsAsync(CancellationToken cancellationToken = default)
+
+    private async Task InitializeCommandsAsync(CancellationToken cancellationToken = default)
     {
         if (_commands.Count == 0) 
             return;
 
         var botCommands = _commands.Values
+            .OrderByDescending(c => c.Item2.Priority)
             .Select(c => new BotCommand 
             { 
                 Command = c.Item2.Name.TrimStart('/'), 
