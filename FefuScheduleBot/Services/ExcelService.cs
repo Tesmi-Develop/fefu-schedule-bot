@@ -12,7 +12,7 @@ namespace FefuScheduleBot.Services;
 [Service]
 public class ExcelService
 {
-    private readonly int _width = Schedule.CountWorkingDays + 2;
+    private const int Width = Schedule.CountWorkingDays + 2;
     [Dependency] private readonly Config _config = null!;
     [Dependency] private readonly FefuService _fefuService = null!;
 
@@ -52,7 +52,7 @@ public class ExcelService
         var range = sheet.Range[startPosition.Y, startPosition.X, startPosition.Y, Schedule.CountWorkingDays + 2];
         
         range.Merge();
-        range.Value = "Сгенерировано автоматически (автор Tesmi)";
+        range.Value = "Сгенерировано автоматически (тг разработчика @tesmidev)";
         ApplyStyle(range, Style.Hat);
         SetBorder(range);
         
@@ -76,7 +76,7 @@ public class ExcelService
             offset += 1;
         }
 
-        var endPoint = new Vector2i(firstPoint.X + _width - 1, firstPoint.Y);
+        var endPoint = new Vector2i(firstPoint.X + Width - 1, firstPoint.Y);
         SetBorder(sheet.Range[firstPoint.Y, firstPoint.X, endPoint.Y, endPoint.X]);
         
         startPosition += new Vector2i(0, 1);
