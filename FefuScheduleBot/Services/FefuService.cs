@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using FefuScheduleBot.ServiceRealisation;
@@ -71,7 +72,7 @@ public class FefuService : IInitializable
         return builder.ToString();
     }
     
-    public async Task<FefuEvent[]?> GetEvents(DateTime start, DateTime end)
+    public async Task<FefuEvent[]> GetEvents(DateTime start, DateTime end)
     {
         start = start.AddDays(-1);
         end = end.AddDays(1);
@@ -109,12 +110,8 @@ public class FefuService : IInitializable
         }
         catch (Exception e)
         {
-            _logger.Error("An error occurred during data deserialization");
-            Console.WriteLine(e);
-            Console.WriteLine(content);
+            throw new SerializationException($"An error occurred during data deserialization. Content:\n{content}");
         }
-
-        return null;
     }
 
     private FefuScheduleData RepairFefuScheduleData(FefuScheduleData data)
@@ -171,11 +168,7 @@ public class FefuService : IInitializable
         var week = GetStudyWeek(weekType);
         var events = await GetEvents(week.Start, week.End);
 
-        if (events is not null) 
-            return new Schedule(week, events);
-        
-        _logger.Warning("Failed to retrieve the current schedule");
-        return new Schedule(week, []);
+        return new Schedule(week, events);
     }
 
     public Schedule FilterBySubgroups(Schedule schedule, string[] subgroups)

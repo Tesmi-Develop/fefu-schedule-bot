@@ -23,7 +23,6 @@ public class ServiceManager
             catch (Exception e)
             {
                 _logger.Error($"Service initialization failed because service [{service.GetType().Name}] threw an exception: \n{e}");
-                break;
             }
         }
     }

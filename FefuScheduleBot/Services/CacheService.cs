@@ -20,7 +20,7 @@ public class CacheService : IInitializable
     [Dependency] private readonly Logger _logger = null!;
     [Dependency] private readonly EnvironmentData _environmentData = null!;
     private ConnectionMultiplexer _redis = null!;
-    private IDatabase _database = null!;
+    private IDatabase? _database;
     
     public void Init()
     {
@@ -39,6 +39,9 @@ public class CacheService : IInitializable
     
     public async Task<ScheduleCache?> GetScheduleCache(Week week, string[] selectedGroups, Schedule schedule)
     {
+        if (_database is null)
+            return null;
+        
         var key = GenerateScheduleKey(week, selectedGroups);
         RedisValue data;
         
@@ -90,7 +93,10 @@ public class CacheService : IInitializable
         var hash = schedule.ComputeHash();
         var data = GenerateScheduleCache(fileId, hash);
         
-        await _database.StringSetAsync(key, data, Ttl);
+        if (_database is null)
+            return;
+        
+        await _database!.StringSetAsync(key, data, Ttl);
     }
 
     public async Task SafeSaveSchedule(Week week, string[] selectedGroups, Schedule schedule, string fileId)
