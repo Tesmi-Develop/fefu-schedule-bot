@@ -88,7 +88,7 @@ public class CacheService : IInitializable
         return JsonSerializer.Serialize(cache);
     }
     
-    public async Task SaveSchedule(string key, Schedule schedule, string fileId)
+    public async Task SaveSchedule(string key, Schedule schedule, string fileId, TimeSpan ttl)
     {
         var hash = schedule.ComputeHash();
         var data = GenerateScheduleCache(fileId, hash);
@@ -96,16 +96,16 @@ public class CacheService : IInitializable
         if (_database is null)
             return;
         
-        await _database!.StringSetAsync(key, data, Ttl);
+        await _database!.StringSetAsync(key, data, ttl);
     }
 
-    public async Task SafeSaveSchedule(Week week, string[] selectedGroups, Schedule schedule, string fileId)
+    public async Task SafeSaveSchedule(Week week, string[] selectedGroups, Schedule schedule, string fileId, TimeSpan ttl)
     {
         var key = GenerateScheduleKey(week, selectedGroups);
         
         try
         {
-            await SaveSchedule(key, schedule, fileId);
+            await SaveSchedule(key, schedule, fileId, ttl);
         }
         catch (Exception e)
         {

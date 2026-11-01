@@ -49,7 +49,7 @@ public class SendSchedule : IChainState
         var fileId = message.Photo?.LastOrDefault()?.FileId;
 
         if (fileId is not null)
-            await _cacheService.SafeSaveSchedule(week, subgroups, schedule, fileId);
+            await _cacheService.SafeSaveSchedule(week, subgroups, schedule, fileId, week.End.AddDays(1) - _fefuService.LocalTime);
         
         _logger.Info("Sent new schedule");
     }
