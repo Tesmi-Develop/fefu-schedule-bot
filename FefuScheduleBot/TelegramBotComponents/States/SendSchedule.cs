@@ -31,6 +31,18 @@ public class SendSchedule : IChainState
         
         return true;
     }
+    
+    private async Task<bool> TrySendScheduleFromCache(Week week, string[] subgroups, CallbackQuery callbackQuery)
+    {
+        var scheduleCache = await _cacheService.GetScheduleCacheWitoutCash(week, subgroups);
+        if (scheduleCache is null)
+            return false;
+        
+        _logger.Debug($"Sending schedule from cache for week: {week}");
+        await _botService.Client.SendPhoto(callbackQuery.Message!.Chat, new InputFileId(scheduleCache.FileId));
+        
+        return true;
+    }
 
     private async Task SendNewSchedule(Week week, Schedule schedule, string[] subgroups, CallbackQuery callbackQuery)
     {
@@ -57,9 +69,24 @@ public class SendSchedule : IChainState
     private async Task StartSending(WeekType weekType, string[] subgroups, CallbackQuery callbackQuery)
     {
         var week = _fefuService.GetStudyWeek(weekType);
-        var schedule = await _fefuService.GetSchedule(weekType);
-        schedule = _fefuService.FilterBySubgroups(schedule, subgroups);
+        Schedule schedule;
         
+        try
+        {
+            schedule = await _fefuService.GetSchedule(weekType);
+            schedule = _fefuService.FilterBySubgroups(schedule, subgroups);
+        }
+        catch (Exception e)
+        {
+            await _botService.SendSafeMessage(callbackQuery.Message!.Chat,
+                "Не удалось получить новое расписание. Попытка вернуть расписание из кеша");
+            
+            if (await TrySendScheduleFromCache(week, subgroups, callbackQuery))
+                return;
+
+            throw;
+        }
+
         if (await TrySendScheduleFromCache(week, subgroups, schedule, callbackQuery))
             return;
 

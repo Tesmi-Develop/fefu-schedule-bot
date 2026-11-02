@@ -76,6 +76,34 @@ public class CacheService : IInitializable
 
         return null;
     }
+    
+    public async Task<ScheduleCache?> GetScheduleCacheWitoutCash(Week week, string[] selectedGroups)
+    {
+        if (_database is null)
+            return null;
+        
+        var key = GenerateScheduleKey(week, selectedGroups);
+        RedisValue data;
+        
+        try
+        {
+            data = await _database.StringGetAsync(key);
+            if (data.IsNullOrEmpty)
+                return null;
+
+            var scheduleCache = JsonSerializer.Deserialize<ScheduleCache>(data.ToString());
+            if (scheduleCache is null)
+                throw new NullReferenceException($"Schedule cache for key {key} found, but deserialization resulted in null");
+            
+            return scheduleCache;
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e);
+        }
+
+        return null;
+    }
 
     private string GenerateScheduleCache(string fileId, string hash)
     {
